@@ -3,13 +3,18 @@ package com.bezkoder.spring.security.postgresql.models;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+//import jakarta.persistence.*;
+//import jakarta.validation.constraints.Email;
+//import jakarta.validation.constraints.NotBlank;
+//import jakarta.validation.constraints.Size;
+
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Entity
-@Table( name = "users", 
+@Table( name = "users",
         uniqueConstraints = { 
           @UniqueConstraint(columnNames = "username"),
           @UniqueConstraint(columnNames = "email") 
@@ -18,6 +23,14 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+  @NotBlank
+  @Size(max = 20)
+  private String nom;
+  @NotBlank
+  @Size(max = 20)
+  private String prenom;
+
+  private String matricule;
 
   @NotBlank
   @Size(max = 20)
@@ -35,14 +48,22 @@ public class User {
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
+  @OneToMany(mappedBy = "sender")
+  private Set<ChatMessage> sentMessages = new HashSet<>();
+  @OneToMany(mappedBy = "receiver")
+  private Set<ChatMessage> receivedMessages = new HashSet<>();
 
   public User() {
   }
 
-  public User(String username, String email, String password) {
+  public User(String username, String email, String nom,String prenom,String matricule,String password) {
     this.username = username;
     this.email = email;
+    this.nom= nom;
+    this.prenom=prenom;
+    this.matricule=matricule;
     this.password = password;
+
   }
 
   public Long getId() {
@@ -83,5 +104,30 @@ public class User {
 
   public void setRoles(Set<Role> roles) {
     this.roles = roles;
+  }
+
+  public String getNom() {
+    return nom;
+  }
+
+  public void setNom(String nom) {
+    this.nom = nom;
+  }
+
+  public void setPrenom(String prenom) {
+    this.prenom = prenom;
+  }
+
+  public void setMatricule(String matricule) {
+    // Supprimez les espaces et définissez la valeur du champ
+    this.matricule = matricule != null ? matricule.trim() : null;
+  }
+
+  public String getPrenom() {
+    return prenom;
+  }
+
+  public String getMatricule() {
+    return matricule;
   }
 }

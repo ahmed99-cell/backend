@@ -1,6 +1,8 @@
 package com.bezkoder.spring.security.postgresql.payload.request;
 
-import jakarta.validation.constraints.NotBlank;
+//import jakarta.validation.constraints.NotBlank;
+
+import javax.validation.constraints.NotBlank;
 
 public class LoginRequest {
   @NotBlank

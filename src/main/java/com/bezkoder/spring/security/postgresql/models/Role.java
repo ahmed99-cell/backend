@@ -1,6 +1,8 @@
 package com.bezkoder.spring.security.postgresql.models;
 
-import jakarta.persistence.*;
+//import jakarta.persistence.*;
+
+import javax.persistence.*;
 
 @Entity
 @Table(name = "roles")

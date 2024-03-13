@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.validation.Valid;
+//import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,10 +35,16 @@ import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import com.bezkoder.spring.security.postgresql.security.jwt.JwtUtils;
 import com.bezkoder.spring.security.postgresql.security.services.UserDetailsImpl;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.validation.Valid;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+  @Autowired
+  private JavaMailSender javaMailSender;
   @Autowired
   AuthenticationManager authenticationManager;
 
@@ -77,10 +86,11 @@ public class AuthController {
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
       return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
     }
+    String plainPassword = signUpRequest.getPassword();
+    // Envoyez le mot de passe par e-mail à l'utilisateur
+    //sendPasswordByEmail(signUpRequest.getEmail(), plainPassword);
+    User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(), signUpRequest.getNom(), signUpRequest.getPrenom(), signUpRequest.getMatricule(), encoder.encode(signUpRequest.getPassword()));
 
-    // Create new user's account
-    User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(),
-        encoder.encode(signUpRequest.getPassword()));
 
     Set<String> strRoles = signUpRequest.getRole();
     Set<Role> roles = new HashSet<>();
@@ -117,4 +127,24 @@ public class AuthController {
 
     return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
+ /* private void sendPasswordByEmail(String email, String plainPassword) {
+    MimeMessage message = javaMailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
+
+    try {
+      helper.setTo(email);
+      helper.setSubject("Votre mot de passe pour l'inscription");
+      helper.setText("Votre mot de passe est : " + plainPassword, true);
+      javaMailSender.send(message);
+
+      // Ajouter un log indiquant que l'e-mail a été envoyé avec succès
+      System.out.println("E-mail envoyé avec succès à : " + email);
+    } catch (MessagingException e) {
+      e.printStackTrace();
+      // Ajouter un log pour capturer les exceptions lors de l'envoi de l'e-mail
+      System.err.println("Erreur lors de l'envoi de l'e-mail à : " + email + ". Cause : " + e.getMessage());
+    }
+  }*/
+
+
 }
