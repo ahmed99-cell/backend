@@ -1,5 +1,8 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,6 +16,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+
 @Entity
 @Table( name = "users",
         uniqueConstraints = { 
@@ -22,7 +26,7 @@ import javax.validation.constraints.Size;
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long matricule;
   @NotBlank
   @Size(max = 20)
   private String nom;
@@ -30,7 +34,7 @@ public class User {
   @Size(max = 20)
   private String prenom;
 
-  private String matricule;
+
 
   @NotBlank
   @Size(max = 20)
@@ -56,23 +60,18 @@ public class User {
   public User() {
   }
 
-  public User(String username, String email, String nom,String prenom,String matricule,String password) {
+  public User(String username, String email, String nom,String prenom,String password) {
     this.username = username;
     this.email = email;
     this.nom= nom;
     this.prenom=prenom;
-    this.matricule=matricule;
     this.password = password;
 
   }
 
-  public Long getId() {
-    return id;
-  }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+
+
 
   public String getUsername() {
     return username;
@@ -118,16 +117,16 @@ public class User {
     this.prenom = prenom;
   }
 
-  public void setMatricule(String matricule) {
+  public void setMatricule(Long matricule) {
     // Supprimez les espaces et définissez la valeur du champ
-    this.matricule = matricule != null ? matricule.trim() : null;
+    this.matricule = matricule;
   }
 
   public String getPrenom() {
     return prenom;
   }
 
-  public String getMatricule() {
+  public Long getMatricule() {
     return matricule;
   }
 }

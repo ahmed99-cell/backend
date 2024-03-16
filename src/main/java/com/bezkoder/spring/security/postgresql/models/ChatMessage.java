@@ -1,13 +1,14 @@
 package com.bezkoder.spring.security.postgresql.models;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {
@@ -22,17 +23,13 @@ public class ChatMessage {
     private User receiver ;
     @Column(nullable = false)
     private String content;
+    private MessageType type ;
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
     public ChatMessage() {
         this.timestamp = LocalDateTime.now();
     }
-    public ChatMessage(User sender, User receiver, String content) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.content = content;
-        this.timestamp = LocalDateTime.now();
-    }
+
 
 }

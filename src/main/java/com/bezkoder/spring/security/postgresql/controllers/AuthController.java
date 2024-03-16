@@ -1,13 +1,13 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 //import jakarta.validation.Valid;
 
+import com.bezkoder.spring.security.postgresql.config.ResetPasswordRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -43,6 +43,8 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+  @Value("${mail.sender.email}")
+  private String mailSenderEmail;
   @Autowired
   private JavaMailSender javaMailSender;
   @Autowired
@@ -74,8 +76,32 @@ public class AuthController {
         .collect(Collectors.toList());
 
     return ResponseEntity
-        .ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getEmail(), roles));
+        .ok(new JwtResponse(jwt, userDetails.getMatricule(), userDetails.getUsername(), userDetails.getEmail(), roles));
   }
+  @PostMapping("/reset-password")
+  public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+
+    Optional<User> userOptional = userRepository.findByEmail(resetPasswordRequest.getEmail());
+    if (userOptional.isEmpty()) {
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: User not found for the provided email"));
+    }
+
+
+    User user = userOptional.get();
+
+
+
+    if (!encoder.matches(resetPasswordRequest.getOldPassword(), user.getPassword())) {
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Incorrect old password"));
+    }
+
+
+    user.setPassword(encoder.encode(resetPasswordRequest.getNewPassword()));
+    userRepository.save(user);
+
+    return ResponseEntity.ok(new MessageResponse("Password reset successfully."));
+  }
+
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
@@ -86,10 +112,13 @@ public class AuthController {
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
       return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
     }
-    String plainPassword = signUpRequest.getPassword();
-    // Envoyez le mot de passe par e-mail à l'utilisateur
-    //sendPasswordByEmail(signUpRequest.getEmail(), plainPassword);
-    User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(), signUpRequest.getNom(), signUpRequest.getPrenom(), signUpRequest.getMatricule(), encoder.encode(signUpRequest.getPassword()));
+    String randomPassword = generateRandomPassword();
+    String plainPassword = randomPassword;
+
+    sendPasswordByEmail(signUpRequest.getEmail(), plainPassword);
+
+
+    User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(), signUpRequest.getNom(), signUpRequest.getPrenom(),  encoder.encode(randomPassword));
 
 
     Set<String> strRoles = signUpRequest.getRole();
@@ -127,24 +156,29 @@ public class AuthController {
 
     return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
- /* private void sendPasswordByEmail(String email, String plainPassword) {
+  private String generateRandomPassword() {
+
+    String randomPassword = UUID.randomUUID().toString().substring(0, 8);
+
+    return randomPassword;
+  }
+  private void sendPasswordByEmail(String recipientEmail, String plainPassword) {
     MimeMessage message = javaMailSender.createMimeMessage();
     MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
 
     try {
-      helper.setTo(email);
+      helper.setTo(recipientEmail);
+      helper.setFrom(mailSenderEmail);
       helper.setSubject("Votre mot de passe pour l'inscription");
       helper.setText("Votre mot de passe est : " + plainPassword, true);
       javaMailSender.send(message);
 
-      // Ajouter un log indiquant que l'e-mail a été envoyé avec succès
-      System.out.println("E-mail envoyé avec succès à : " + email);
+      System.out.println("E-mail envoyé avec succès à : " + recipientEmail);
     } catch (MessagingException e) {
       e.printStackTrace();
-      // Ajouter un log pour capturer les exceptions lors de l'envoi de l'e-mail
-      System.err.println("Erreur lors de l'envoi de l'e-mail à : " + email + ". Cause : " + e.getMessage());
+      System.err.println("Erreur lors de l'envoi de l'e-mail à : " + recipientEmail + ". Cause : " + e.getMessage());
     }
-  }*/
+  }
 
 
 }
