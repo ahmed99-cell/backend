@@ -49,6 +49,7 @@ public class User {
   @Size(max = 120)
   private String password;
 
+
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
@@ -56,6 +57,14 @@ public class User {
   private Set<ChatMessage> sentMessages = new HashSet<>();
   @OneToMany(mappedBy = "receiver")
   private Set<ChatMessage> receivedMessages = new HashSet<>();
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private Set<Question> questions = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private Set<Answer> answers = new HashSet<>();
+
+
+
 
   public User() {
   }

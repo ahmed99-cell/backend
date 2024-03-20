@@ -5,6 +5,7 @@ import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.User;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,5 +51,7 @@ public class UserController {
             return userRepository.save((user));
         }).orElseThrow(() -> new UserNotFoundException(matricule));
     }
+
+
 
 }
