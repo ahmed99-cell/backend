@@ -36,6 +36,8 @@ public class Question {
     private Date updatedAt;
 
 
+
+
     public Date getCreatedAt() {
         return createdAt;
     }
