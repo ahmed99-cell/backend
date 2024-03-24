@@ -3,6 +3,7 @@ package com.bezkoder.spring.security.postgresql.service;
 import com.bezkoder.spring.security.postgresql.models.Answer;
 import com.bezkoder.spring.security.postgresql.models.AnswerResponse;
 import com.bezkoder.spring.security.postgresql.models.Question;
+import com.bezkoder.spring.security.postgresql.models.Tag;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 
@@ -23,5 +24,7 @@ public interface QuestionService {
     List<AnswerResponse> getResponsesToAnswer(Long questionId, Long answerId);
     AnswerResponse updateResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, AnswerRequest answerRequest, String username);
     void deleteResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, String username);
+     void associateTagWithQuestion(Long questionId, Tag tag);
+    void dissociateTagFromQuestion(Long questionId, Long tagId);
 
 }

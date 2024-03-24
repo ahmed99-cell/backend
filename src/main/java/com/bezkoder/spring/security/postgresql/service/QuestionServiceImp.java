@@ -1,9 +1,7 @@
 package com.bezkoder.spring.security.postgresql.service;
 
-import com.bezkoder.spring.security.postgresql.models.Answer;
-import com.bezkoder.spring.security.postgresql.models.AnswerResponse;
-import com.bezkoder.spring.security.postgresql.models.Question;
-import com.bezkoder.spring.security.postgresql.models.User;
+import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
+import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
@@ -209,5 +207,21 @@ public class QuestionServiceImp implements QuestionService{
         }
 
         answerResponseRepository.delete(response);
+    }
+    public void associateTagWithQuestion(Long questionId, Tag tag) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
+
+        question.getTags().add(tag);
+        questionRepository.save(question);
+    }
+
+    // Dissocier un tag d'une question
+    public void dissociateTagFromQuestion(Long questionId, Long tagId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
+
+        question.getTags().removeIf(tag -> tag.getId().equals(tagId));
+        questionRepository.save(question);
     }
 }

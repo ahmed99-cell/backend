@@ -9,6 +9,7 @@ import com.bezkoder.spring.security.postgresql.repository.AnswerResponseReposito
 import com.bezkoder.spring.security.postgresql.repository.QuestionRepository;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
+import com.bezkoder.spring.security.postgresql.service.QuestionServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+
     @GetMapping("/all")
     public List<Question> getAllQuestions() {
         return questionService.getAllQuestions();
@@ -104,6 +106,18 @@ public class QuestionController {
         String username = userDetails.getUsername();
         questionService.deleteResponseToAnswer(questionId, parentAnswerId, responseId, username);
         return ResponseEntity.ok(new MessageResponse("Response to Answer deleted successfully!"));
+    }
+    @PostMapping("/{questionId}/tags")
+    public ResponseEntity<?> associateTagWithQuestion(@PathVariable(value = "questionId") Long questionId, @RequestBody Tag tag) {
+        questionService.associateTagWithQuestion(questionId, tag);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @DeleteMapping("/{questionId}/tags/{tagId}")
+    public ResponseEntity<?> dissociateTagFromQuestion(@PathVariable(value = "questionId") Long questionId, @PathVariable(value = "tagId") Long tagId) {
+        questionService.dissociateTagFromQuestion(questionId, tagId);
+        return ResponseEntity.ok().build();
     }
 
 
