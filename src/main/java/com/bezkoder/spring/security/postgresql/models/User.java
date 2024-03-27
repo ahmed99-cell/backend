@@ -48,7 +48,43 @@ public class User {
   @NotBlank
   @Size(max = 120)
   private String password;
+  @OneToMany(mappedBy = "sender")
+  private Set<Message> sentMessages = new HashSet<>();
 
+  @OneToMany(mappedBy = "receiver")
+  private Set<Message> receivedMessages = new HashSet<>();
+
+  public Set<Message> getSentMessages() {
+    return sentMessages;
+  }
+
+  public void setSentMessages(Set<Message> sentMessages) {
+    this.sentMessages = sentMessages;
+  }
+
+  public Set<Message> getReceivedMessages() {
+    return receivedMessages;
+  }
+
+  public void setReceivedMessages(Set<Message> receivedMessages) {
+    this.receivedMessages = receivedMessages;
+  }
+
+  public Set<Question> getQuestions() {
+    return questions;
+  }
+
+  public void setQuestions(Set<Question> questions) {
+    this.questions = questions;
+  }
+
+  public Set<Answer> getAnswers() {
+    return answers;
+  }
+
+  public void setAnswers(Set<Answer> answers) {
+    this.answers = answers;
+  }
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))

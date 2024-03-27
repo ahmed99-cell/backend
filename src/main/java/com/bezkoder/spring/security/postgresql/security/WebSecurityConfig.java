@@ -21,7 +21,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.bezkoder.spring.security.postgresql.security.jwt.AuthEntryPointJwt;
 import com.bezkoder.spring.security.postgresql.security.jwt.AuthTokenFilter;
 import com.bezkoder.spring.security.postgresql.security.services.UserDetailsServiceImpl;
+import org.springframework.web.cors.CorsConfiguration;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity
@@ -29,6 +34,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 // jsr250Enabled = true,
 // prePostEnabled = true) // by default
 @EnableSwagger2
+
 
 public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
   private boolean swaggerEnabled;
@@ -72,7 +78,9 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+
   }
+
 
 //  @Override
 //  protected void configure(HttpSecurity http) throws Exception {
@@ -85,18 +93,25 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 //
 //    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 //  }
-  
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(this.unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(authorize -> authorize
-                    .antMatchers("/api/auth/**", "/api/test/**").permitAll()
+                    .antMatchers("/api/auth/**", "/api/test/**", "/ws/**").permitAll()
                     .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
-
             );
+    http.cors(cors -> cors.configurationSource(request -> {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:8080")); // remplacez par votre motif spécifique
+      configuration.setAllowedMethods(Arrays.asList("GET","POST", "PUT", "DELETE"));
+      configuration.setAllowedHeaders(Arrays.asList("*"));
+      configuration.setAllowCredentials(true); // Autoriser les credentials
+      return configuration;
+    }));
 
     http.authenticationProvider(authenticationProvider());
 
