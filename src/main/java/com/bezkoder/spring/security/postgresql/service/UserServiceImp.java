@@ -1,7 +1,9 @@
 package com.bezkoder.spring.security.postgresql.service;
 
 import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
+import com.bezkoder.spring.security.postgresql.models.Badge;
 import com.bezkoder.spring.security.postgresql.models.User;
+import com.bezkoder.spring.security.postgresql.repository.BadgeRepository;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,8 @@ import java.util.List;
 public class UserServiceImp implements UserService{
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BadgeRepository badgeRepository;
 
 
     @Override
@@ -45,5 +49,29 @@ public class UserServiceImp implements UserService{
             return userRepository.save(user);
         }).orElseThrow(() -> new UserNotFoundException(matricule));
 
+    }
+    @Override
+    public void addBadgeToUser(Long userId, Badge badge) {
+        // Créer un nouveau badge
+        badge.setName("Nom du badge");
+        badge.setDescription("Description du badge");
+        badge.setIconUrl("URL de l'icône du badge");
+
+        // Sauvegarder le badge dans la base de données
+        badge = badgeRepository.save(badge);
+
+        // Récupérer un utilisateur
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user != null) {
+            // Ajouter le badge à la collection de badges de l'utilisateur
+            user.getBadges().add(badge);
+
+            // Sauvegarder l'utilisateur dans la base de données
+            userRepository.save(user);
+        }
+    }
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 }

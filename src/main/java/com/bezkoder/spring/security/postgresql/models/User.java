@@ -53,6 +53,43 @@ public class User {
 
   @OneToMany(mappedBy = "receiver")
   private Set<Message> receivedMessages = new HashSet<>();
+  @ManyToMany
+  @JoinTable(
+          name = "user_badges",
+          joinColumns = @JoinColumn(name = "user_id"),
+          inverseJoinColumns = @JoinColumn(name = "badge_id"))
+  private Set<Badge> badges;
+
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+  private Reputation reputation;
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+  private Set<Role> roles = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private Set<Question> questions = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private Set<Answer> answers = new HashSet<>();
+
+  public Set<Badge> getBadges() {
+    return badges;
+  }
+
+  public void setBadges(Set<Badge> badges) {
+    this.badges = badges;
+  }
+
+  public Reputation getReputation() {
+    return reputation;
+  }
+
+  public void setReputation(Reputation reputation) {
+    this.reputation = reputation;
+  }
+
+
+
 
   public Set<Message> getSentMessages() {
     return sentMessages;
@@ -86,15 +123,7 @@ public class User {
     this.answers = answers;
   }
 
-  @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-  private Set<Role> roles = new HashSet<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  private Set<Question> questions = new HashSet<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  private Set<Answer> answers = new HashSet<>();
 
 
 
