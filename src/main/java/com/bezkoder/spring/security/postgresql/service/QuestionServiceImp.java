@@ -5,15 +5,15 @@ import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
-import com.bezkoder.spring.security.postgresql.repository.AnswerRepository;
-import com.bezkoder.spring.security.postgresql.repository.AnswerResponseRepository;
-import com.bezkoder.spring.security.postgresql.repository.QuestionRepository;
-import com.bezkoder.spring.security.postgresql.repository.UserRepository;
+import com.bezkoder.spring.security.postgresql.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,6 +32,10 @@ public class QuestionServiceImp implements QuestionService{
 
     @Autowired
     private AnswerResponseRepository answerResponseRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
+    @Autowired
+    private JavaMailSender mailSender;
 
 
     @Override
@@ -120,33 +124,60 @@ public class QuestionServiceImp implements QuestionService{
         answer.setUser(user);
         answer.setQuestion(question);
         answer.setCreatedAt(new Date());
-        return answerRepository.save(answer);
+        Answer savedAnswer = answerRepository.save(answer);
+
+        Notification notification = new Notification();
+        notification.setUser(question.getUser());
+        notification.setContent("Une nouvelle réponse a été ajoutée à votre question");
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        // Enregistrer la notification dans la base de données
+        notificationRepository.save(notification);
+        sendNotificationEmail(question.getUser(), "Une nouvelle réponse a été ajoutée à votre question");
+
+
+        return savedAnswer;
     }
 
     @Override
     public AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username) {
-        // Trouver l'utilisateur authentifié
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Trouver la réponse parente
         Answer parentAnswer = answerRepository.findById(parentAnswerId)
                 .orElseThrow(() -> new RuntimeException("Parent Answer not found"));
 
-        // Assurer que la réponse parente appartient à la question spécifiée
         if (!parentAnswer.getQuestion().getId().equals(questionId)) {
             throw new RuntimeException("Parent Answer does not belong to the specified question");
         }
 
-        // Créer la réponse à la réponse
         AnswerResponse response = new AnswerResponse();
         response.setContent(answerRequest.getContent());
         response.setUser(user);
         response.setParentAnswer(parentAnswer);
         response.setCreatedAt(new Date());
+        AnswerResponse savedResponse = answerResponseRepository.save(response);
 
-        // Sauvegarder la réponse à la réponse et la retourner
-        return answerResponseRepository.save(response);
+        Notification notification = new Notification();
+        notification.setUser(parentAnswer.getUser());
+        notification.setContent("Une nouvelle réponse à une réponse a été ajoutée");
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        // Enregistrer la notification dans la base de données
+        notificationRepository.save(notification);
+        sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre question");
+
+
+        return savedResponse;
+    }
+    private void sendNotificationEmail(User user, String content) {
+        SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(user.getEmail());
+        email.setSubject("Notification");
+        email.setText(content);
+        mailSender.send(email);
     }
 
 

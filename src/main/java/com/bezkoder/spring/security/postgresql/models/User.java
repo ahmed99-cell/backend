@@ -63,6 +63,17 @@ public class User {
 
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
   private Reputation reputation;
+  @OneToMany(mappedBy = "user")
+  private List<Notification> notifications;
+
+  public List<Notification> getNotifications() {
+    return notifications;
+  }
+
+  public void setNotifications(List<Notification> notifications) {
+    this.notifications = notifications;
+  }
+
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
