@@ -4,24 +4,15 @@ import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
-import com.bezkoder.spring.security.postgresql.repository.AnswerRepository;
-import com.bezkoder.spring.security.postgresql.repository.AnswerResponseRepository;
-import com.bezkoder.spring.security.postgresql.repository.QuestionRepository;
-import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
-import com.bezkoder.spring.security.postgresql.service.QuestionServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -29,6 +20,10 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+
+
+
+
 
     @GetMapping("/all")
     public List<Question> getAllQuestions() {

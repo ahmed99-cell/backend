@@ -33,6 +33,7 @@ public class QuestionServiceImp implements QuestionService{
     @Autowired
     private AnswerResponseRepository answerResponseRepository;
 
+
     @Override
     public List<Question> getAllQuestions() {
         return questionRepository.findAll();
@@ -54,6 +55,7 @@ public class QuestionServiceImp implements QuestionService{
         return questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
     }
+
 
     @Override
     public Question updateQuestion(Long questionId, QuestionRequest questionRequest) {

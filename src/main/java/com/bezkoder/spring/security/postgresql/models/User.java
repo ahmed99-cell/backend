@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 //import jakarta.persistence.*;
@@ -66,11 +67,28 @@ public class User {
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
+
+
+
+
+
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private Set<Question> questions = new HashSet<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private Set<Answer> answers = new HashSet<>();
+
+  public List<Favorite> getFavorites() {
+    return favorites;
+  }
+
+  public void setFavorites(List<Favorite> favorites) {
+    this.favorites = favorites;
+  }
+
+  @OneToMany(mappedBy = "user")
+  private List<Favorite> favorites;
 
   public Set<Badge> getBadges() {
     return badges;

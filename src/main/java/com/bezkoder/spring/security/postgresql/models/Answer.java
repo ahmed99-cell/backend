@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -27,6 +28,13 @@ public class Answer {
     @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+
+
+
+
+
+
 
     public Date getUpdatedAt() {
         return updatedAt;
@@ -93,4 +101,15 @@ public class Answer {
     private Question question;
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    public List<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(List<Favorite> favorites) {
+        this.favorites = favorites;
+    }
+
+    @OneToMany(mappedBy = "answer")
+    private List<Favorite> favorites;
 }

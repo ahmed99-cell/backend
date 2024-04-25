@@ -21,6 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.bezkoder.spring.security.postgresql.security.jwt.AuthEntryPointJwt;
 import com.bezkoder.spring.security.postgresql.security.jwt.AuthTokenFilter;
 import com.bezkoder.spring.security.postgresql.security.services.UserDetailsServiceImpl;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -62,6 +64,12 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
       authProvider.setPasswordEncoder(passwordEncoder());
    
       return authProvider;
+  }
+  @Bean
+  public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
+    StrictHttpFirewall firewall = new StrictHttpFirewall();
+    firewall.setAllowUrlEncodedPercent(true); // Allow % in URLs
+    return firewall;
   }
 
 //  @Bean

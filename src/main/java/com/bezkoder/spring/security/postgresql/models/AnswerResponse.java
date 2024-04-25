@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "answer_responses")
@@ -81,4 +84,15 @@ public class AnswerResponse {
     @JoinColumn(name = "parent_answer_id")
     @JsonIgnore
     private Answer parentAnswer;
+    @OneToMany(mappedBy = "answerResponse")
+    private List<Favorite> favorites;
+
+
+    public List<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(List<Favorite> favorites) {
+        this.favorites = favorites;
+    }
 }
