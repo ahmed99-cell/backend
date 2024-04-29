@@ -6,10 +6,12 @@ import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -29,10 +31,10 @@ public class QuestionController {
     public List<Question> getAllQuestions() {
         return questionService.getAllQuestions();
     }
-    @PostMapping("/create")
-    public ResponseEntity<?> createQuestion(@Valid @RequestBody QuestionRequest questionRequest, @AuthenticationPrincipal UserDetails userDetails) {
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
-        Question question = questionService.createQuestion(questionRequest, username);
+        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile());
         return ResponseEntity.ok(new MessageResponse("Question created successfully!"));
     }
     @GetMapping("/{questionId}")

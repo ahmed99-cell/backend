@@ -6,12 +6,14 @@ import com.bezkoder.spring.security.postgresql.models.Question;
 import com.bezkoder.spring.security.postgresql.models.Tag;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface QuestionService {
     List<Question> getAllQuestions();
-    Question createQuestion(QuestionRequest questionRequest, String username);
+    Question createQuestion(QuestionRequest questionRequest, String username, @RequestParam("file") MultipartFile file)   ;
     Question getQuestionById(Long questionId);
     Question updateQuestion(Long questionId, QuestionRequest questionRequest);
     void deleteQuestion(Long questionId);

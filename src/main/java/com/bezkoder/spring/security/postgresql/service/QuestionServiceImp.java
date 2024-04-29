@@ -11,8 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,14 +46,34 @@ public class QuestionServiceImp implements QuestionService{
         return questionRepository.findAll();
     }
 
-    @Override
-    public Question createQuestion(QuestionRequest questionRequest, String username) {
+    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file) {
+        if (questionRequest == null) {
+            throw new IllegalArgumentException("QuestionRequest cannot be null");
+        }
+
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         Question question = new Question();
         question.setTitle(questionRequest.getTitle());
         question.setContent(questionRequest.getContent());
         question.setUser(user);
         question.setCreatedAt(new Date());
+
+        if (file != null) {
+            // Check the file type
+            String contentType = file.getContentType();
+
+            if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
+                throw new RuntimeException("Unsupported file type");
+            }
+
+            try {
+                question.setFile(file.getBytes());
+                question.setContentType(file.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading file", e);
+            }
+        }
+
         return questionRepository.save(question);
     }
 
@@ -167,7 +190,7 @@ public class QuestionServiceImp implements QuestionService{
 
         // Enregistrer la notification dans la base de données
         notificationRepository.save(notification);
-        sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre question");
+        sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre réponse de question");
 
 
         return savedResponse;
