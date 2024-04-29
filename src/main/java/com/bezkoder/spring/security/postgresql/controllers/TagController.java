@@ -17,10 +17,7 @@ public class TagController {
     private TagService tagService;
 
 
-    @PostMapping("/create")
-    public Tag createTag(@Valid @RequestBody Tag tag) {
-        return tagService.createTag(tag);
-    }
+
 
 
     @GetMapping("/getAll")

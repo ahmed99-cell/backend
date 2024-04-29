@@ -5,7 +5,9 @@ import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
+import com.bezkoder.spring.security.postgresql.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +24,9 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+    @Autowired
+    private TagService tagService;
+
 
 
 
@@ -35,11 +40,51 @@ public class QuestionController {
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile());
-        return ResponseEntity.ok(new MessageResponse("Question created successfully!"));
+
+        // Créer le tag
+        Tag tag = questionRequestWrapper.getTag();
+        Tag createdTag = tagService.createTag(tag);
+
+        // Associer le tag à la question
+        questionService.associateTagWithQuestion(question.getId(), createdTag);
+
+        return ResponseEntity.ok(new MessageResponse("Question and tag created successfully!"));
     }
+    @GetMapping("/files/{id}")
+    public ResponseEntity<byte[]> getFile(@PathVariable Long id) {
+        Question question = questionService.getQuestionById(id)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
+
+        String fileName = question.getTitle();
+        byte[] fileContent = question.getFile();
+
+        MediaType mediaType = getMediaTypeForFileName(fileName);
+        if (mediaType == null) {
+            throw new RuntimeException("Unsupported file type");
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                .body(fileContent);
+    }
+
+    private MediaType getMediaTypeForFileName(String fileName) {
+        if (fileName.endsWith(".pdf")) {
+            return MediaType.APPLICATION_PDF;
+        } else if (fileName.endsWith(".jpeg") || fileName.endsWith(".jpg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (fileName.endsWith(".csv")) {
+            return new MediaType("text", "csv");
+        } else {
+            return null;
+        }
+    }
+
     @GetMapping("/{questionId}")
     public ResponseEntity<Question> getQuestionById(@PathVariable Long questionId) {
-        Question question = questionService.getQuestionById(questionId);
+        Question question = questionService.getQuestionById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
         return ResponseEntity.ok().body(question);
     }
     @PutMapping("/{questionId}")

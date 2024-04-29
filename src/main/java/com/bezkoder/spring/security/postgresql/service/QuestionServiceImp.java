@@ -17,10 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class QuestionServiceImp implements QuestionService{
@@ -75,12 +72,12 @@ public class QuestionServiceImp implements QuestionService{
         }
 
         return questionRepository.save(question);
+
     }
 
     @Override
-    public Question getQuestionById(Long questionId) {
-        return questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+    public Optional<Question> getQuestionById(Long id) {
+        return questionRepository.findById(id);
     }
 
 

@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface QuestionService {
     List<Question> getAllQuestions();
     Question createQuestion(QuestionRequest questionRequest, String username, @RequestParam("file") MultipartFile file)   ;
-    Question getQuestionById(Long questionId);
+    Optional<Question> getQuestionById(Long id);
     Question updateQuestion(Long questionId, QuestionRequest questionRequest);
     void deleteQuestion(Long questionId);
     Answer getAnswerById(Long questionId, Long answerId);
