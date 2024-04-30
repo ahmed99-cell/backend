@@ -1,5 +1,6 @@
 package com.bezkoder.spring.security.postgresql.service;
 
+import com.bezkoder.spring.security.postgresql.Dto.UserDto;
 import com.bezkoder.spring.security.postgresql.models.Badge;
 import com.bezkoder.spring.security.postgresql.models.User;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public interface UserService {
 
-    List<User> getAllUsers();
+    List<UserDto> getAllUsers();
     User getUserById(Long matricule);
     void deleteUser(Long matricule);
     User updateUser(User newUser, Long matricule);

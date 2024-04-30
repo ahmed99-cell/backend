@@ -1,5 +1,7 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import javax.persistence.*;
 
 @Entity
@@ -35,6 +37,7 @@ public class Reputation {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
     private int score;
 }

@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
 
+import com.bezkoder.spring.security.postgresql.Dto.UserDto;
 import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.User;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
@@ -19,8 +20,9 @@ public class UserController {
 
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/user/{id}")

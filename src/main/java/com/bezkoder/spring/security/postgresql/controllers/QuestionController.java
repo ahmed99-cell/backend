@@ -42,11 +42,9 @@ public class QuestionController {
         String username = userDetails.getUsername();
         Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile());
 
-        // Créer le tag
         Tag tag = questionRequestWrapper.getTag();
         Tag createdTag = tagService.createTag(tag);
 
-        // Associer le tag à la question
         questionService.associateTagWithQuestion(question.getId(), createdTag);
 
         return ResponseEntity.ok(new MessageResponse("Question and tag created successfully!"));

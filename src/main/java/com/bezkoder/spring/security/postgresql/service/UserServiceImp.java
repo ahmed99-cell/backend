@@ -1,7 +1,9 @@
 package com.bezkoder.spring.security.postgresql.service;
 
+import com.bezkoder.spring.security.postgresql.Dto.UserDto;
 import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.Badge;
+import com.bezkoder.spring.security.postgresql.models.Role;
 import com.bezkoder.spring.security.postgresql.models.User;
 import com.bezkoder.spring.security.postgresql.repository.BadgeRepository;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImp implements UserService{
     @Autowired
@@ -18,8 +22,23 @@ public class UserServiceImp implements UserService{
 
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+    }
+    public UserDto convertToDto(User user) {
+        UserDto userDto = new UserDto();
+        userDto.setMatricul(user.getMatricule());
+        userDto.setEmail(user.getEmail());
+        userDto.setNom(user.getNom());
+        userDto.setPrenom(user.getPrenom());
+        userDto.setRoles(user.getRoles().stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toList()));
+        return userDto;
     }
 
     @Override

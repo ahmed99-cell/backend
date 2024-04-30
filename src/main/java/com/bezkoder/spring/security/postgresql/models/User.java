@@ -1,5 +1,7 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -62,6 +64,7 @@ public class User {
   private Set<Badge> badges;
 
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+  @JsonManagedReference
   private Reputation reputation;
   @OneToMany(mappedBy = "user")
   private List<Notification> notifications;
@@ -85,6 +88,7 @@ public class User {
 
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @JsonIgnore
   private Set<Question> questions = new HashSet<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
