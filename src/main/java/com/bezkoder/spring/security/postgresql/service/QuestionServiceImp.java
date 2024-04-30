@@ -1,5 +1,6 @@
 package com.bezkoder.spring.security.postgresql.service;
 
+import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
@@ -18,6 +19,7 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionServiceImp implements QuestionService{
@@ -39,8 +41,25 @@ public class QuestionServiceImp implements QuestionService{
 
 
     @Override
-    public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
+
+    public List<QuestionDto> getAllQuestions() {
+        return questionRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public QuestionDto mapToDto(Question question) {
+        QuestionDto dto = new QuestionDto();
+        dto.setId(question.getId());
+        dto.setTitle(question.getTitle());
+        dto.setContent(question.getContent());
+        dto.setUsername(question.getUser().getUsername());
+        dto.setCreatedAt(question.getCreatedAt());
+        dto.setUpdatedAt(question.getUpdatedAt());
+        dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
+        return dto;
+
     }
 
     public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file) {

@@ -1,5 +1,6 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
+import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
@@ -33,7 +34,7 @@ public class QuestionController {
 
 
     @GetMapping("/all")
-    public List<Question> getAllQuestions() {
+    public List<QuestionDto> getAllQuestions() {
         return questionService.getAllQuestions();
     }
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
