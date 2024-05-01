@@ -16,10 +16,14 @@ public class TagController {
     @Autowired
     private TagService tagService;
 
-
-
-
-
+    @PostMapping("/create")
+    public ResponseEntity<Tag> createTag(@RequestBody Tag tag) {
+        if (tag.getDescription() == null || tag.getDescription().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        Tag createdTag = tagService.createTag(tag);
+        return ResponseEntity.ok(createdTag);
+    }
     @GetMapping("/getAll")
     public List<Tag> getAllTags() {
         return tagService.getAllTags();

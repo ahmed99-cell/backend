@@ -1,20 +1,19 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
-import com.bezkoder.spring.security.postgresql.models.Tag;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 public class QuestionRequestWrapper {
     private QuestionRequest questionRequest;
     private MultipartFile file;
-    private Tag tag;
+    private Long tagId;
 
-    public Tag getTag() {
-        return tag;
+    public Long getTagId() {
+        return tagId;
     }
 
-    public void setTag(Tag tag) {
-        this.tag = tag;
+    public void setTagId(Long tagId) {
+        this.tagId = tagId;
     }
 
     public QuestionRequest getQuestionRequest() {

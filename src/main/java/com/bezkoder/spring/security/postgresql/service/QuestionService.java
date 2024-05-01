@@ -16,7 +16,8 @@ import java.util.Optional;
 public interface QuestionService {
     List<QuestionDto> getAllQuestions();
      QuestionDto mapToDto(Question question);
-    Question createQuestion(QuestionRequest questionRequest, String username, @RequestParam("file") MultipartFile file)   ;
+    Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, Long tagId);
+    public void associateTagWithQuestion(Long questionId, Long tagId);
     Optional<Question> getQuestionById(Long id);
     Question updateQuestion(Long questionId, QuestionRequest questionRequest);
     void deleteQuestion(Long questionId);

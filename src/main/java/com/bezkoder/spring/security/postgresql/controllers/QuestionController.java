@@ -40,14 +40,14 @@ public class QuestionController {
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
-        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile());
+        Long tagId = questionRequestWrapper.getTagId();
+        if (tagId == null) {
+            return ResponseEntity.badRequest().body("Tag ID must not be null");
+        }
 
-        Tag tag = questionRequestWrapper.getTag();
-        Tag createdTag = tagService.createTag(tag);
+        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagId);
 
-        questionService.associateTagWithQuestion(question.getId(), createdTag);
-
-        return ResponseEntity.ok(new MessageResponse("Question and tag created successfully!"));
+        return ResponseEntity.ok(new MessageResponse("Question created and associated with tag successfully!"));
     }
     @GetMapping("/files/{id}")
     public ResponseEntity<byte[]> getFile(@PathVariable Long id) {

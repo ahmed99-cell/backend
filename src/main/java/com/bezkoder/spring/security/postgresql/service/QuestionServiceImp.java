@@ -38,6 +38,8 @@ public class QuestionServiceImp implements QuestionService{
     private NotificationRepository notificationRepository;
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private TagRepository tagRepository;
 
 
     @Override
@@ -61,18 +63,21 @@ public class QuestionServiceImp implements QuestionService{
         return dto;
 
     }
-
-    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file) {
+@Override
+    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, Long tagId) {
         if (questionRequest == null) {
             throw new IllegalArgumentException("QuestionRequest cannot be null");
         }
 
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new RuntimeException("Tag not found"));
+
         Question question = new Question();
         question.setTitle(questionRequest.getTitle());
         question.setContent(questionRequest.getContent());
         question.setUser(user);
         question.setCreatedAt(new Date());
+        question.getTags().add(tag);
 
         if (file != null) {
             // Check the file type
@@ -91,7 +96,16 @@ public class QuestionServiceImp implements QuestionService{
         }
 
         return questionRepository.save(question);
+    }
+    public void associateTagWithQuestion(Long questionId, Long tagId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
 
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag", "id", tagId));
+
+        question.getTags().add(tag);
+        questionRepository.save(question);
     }
 
     @Override
