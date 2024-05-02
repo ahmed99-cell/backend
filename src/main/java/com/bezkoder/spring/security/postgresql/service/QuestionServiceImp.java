@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.service;
 
 import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
+import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
@@ -8,6 +9,8 @@ import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
 import com.bezkoder.spring.security.postgresql.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -40,12 +43,21 @@ public class QuestionServiceImp implements QuestionService{
     private JavaMailSender mailSender;
     @Autowired
     private TagRepository tagRepository;
+    @Autowired
+    QuestionRepositoryCustom questionRepositoryCustom;
 
 
     @Override
+    public List<QuestionDto> getAllQuestions(QuestionSearchRequestDto searchRequest) {
+        Pageable pageable = PageRequest.of(searchRequest.getPageIndex(), searchRequest.getPageSize());
+        List<Question> questions = questionRepositoryCustom.findByCriteria(
+                searchRequest.getTitle(),
+                searchRequest.getContent(),
+                searchRequest.getUserId(),
+                pageable
+        );
 
-    public List<QuestionDto> getAllQuestions() {
-        return questionRepository.findAll().stream()
+        return questions.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -60,6 +72,8 @@ public class QuestionServiceImp implements QuestionService{
         dto.setCreatedAt(question.getCreatedAt());
         dto.setUpdatedAt(question.getUpdatedAt());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
+
+
         return dto;
 
     }

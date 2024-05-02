@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
 import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
+import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
@@ -28,14 +29,9 @@ public class QuestionController {
     @Autowired
     private TagService tagService;
 
-
-
-
-
-
-    @GetMapping("/all")
-    public List<QuestionDto> getAllQuestions() {
-        return questionService.getAllQuestions();
+    @PostMapping("/all")
+    public List<QuestionDto> getAllQuestions(@RequestBody QuestionSearchRequestDto searchRequest) {
+        return questionService.getAllQuestions(searchRequest);
     }
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {

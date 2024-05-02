@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.service;
 
 import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
+import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
 import com.bezkoder.spring.security.postgresql.models.Answer;
 import com.bezkoder.spring.security.postgresql.models.AnswerResponse;
 import com.bezkoder.spring.security.postgresql.models.Question;
@@ -14,10 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface QuestionService {
-    List<QuestionDto> getAllQuestions();
+    List<QuestionDto> getAllQuestions(QuestionSearchRequestDto searchRequest);
      QuestionDto mapToDto(Question question);
     Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, Long tagId);
-    public void associateTagWithQuestion(Long questionId, Long tagId);
+     void associateTagWithQuestion(Long questionId, Long tagId);
     Optional<Question> getQuestionById(Long id);
     Question updateQuestion(Long questionId, QuestionRequest questionRequest);
     void deleteQuestion(Long questionId);
