@@ -324,4 +324,18 @@ public class QuestionServiceImp implements QuestionService{
         question.getTags().removeIf(tag -> tag.getId().equals(tagId));
         questionRepository.save(question);
     }
+
+    @Override
+    public List<Question> getQuestionsWithAnswers() {
+        return questionRepository.findAll().stream()
+                .filter(question -> !question.getAnswers().isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Question> getQuestionsWithoutAnswers() {
+        return questionRepository.findAll().stream()
+                .filter(question -> question.getAnswers().isEmpty())
+                .collect(Collectors.toList());
+    }
 }

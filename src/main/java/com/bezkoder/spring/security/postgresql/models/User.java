@@ -69,6 +69,17 @@ public class User {
   @OneToMany(mappedBy = "user")
   private List<Notification> notifications;
 
+  public Set<Vote> getVotes() {
+    return votes;
+  }
+
+  public void setVotes(Set<Vote> votes) {
+    this.votes = votes;
+  }
+
+  @OneToMany(mappedBy = "user")
+  private Set<Vote> votes = new HashSet<>();
+
   public List<Notification> getNotifications() {
     return notifications;
   }
@@ -222,7 +233,6 @@ public class User {
   }
 
   public void setMatricule(Long matricule) {
-    // Supprimez les espaces et définissez la valeur du champ
     this.matricule = matricule;
   }
 

@@ -102,6 +102,17 @@ public class Answer {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    public Set<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<Vote> votes) {
+        this.votes = votes;
+    }
+
+    @OneToMany(mappedBy = "answer")
+    private Set<Vote> votes = new HashSet<>();
+
     public List<Favorite> getFavorites() {
         return favorites;
     }

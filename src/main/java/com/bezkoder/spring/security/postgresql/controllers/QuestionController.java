@@ -156,6 +156,15 @@ public class QuestionController {
         questionService.dissociateTagFromQuestion(questionId, tagId);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/questionsWithAnswers")
+    public ResponseEntity<List<Question>> getQuestionsWithAnswers() {
+        return ResponseEntity.ok(questionService.getQuestionsWithAnswers());
+    }
+
+    @GetMapping("/questionsWithoutAnswers")
+    public ResponseEntity<List<Question>> getQuestionsWithoutAnswers() {
+        return ResponseEntity.ok(questionService.getQuestionsWithoutAnswers());
+    }
 
 
 }

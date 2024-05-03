@@ -33,5 +33,7 @@ public interface QuestionService {
     void deleteResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, String username);
      void associateTagWithQuestion(Long questionId, Tag tag);
     void dissociateTagFromQuestion(Long questionId, Long tagId);
+    List<Question> getQuestionsWithAnswers();
+    List<Question> getQuestionsWithoutAnswers();
 
 }

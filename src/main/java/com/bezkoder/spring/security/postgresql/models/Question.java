@@ -91,6 +91,17 @@ public class Question {
     @OneToMany(mappedBy = "question")
     private List<Favorite> favorites;
 
+    public Set<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<Vote> votes) {
+        this.votes = votes;
+    }
+
+    @OneToMany(mappedBy = "question")
+    private Set<Vote> votes = new HashSet<>();
+
 
 
 

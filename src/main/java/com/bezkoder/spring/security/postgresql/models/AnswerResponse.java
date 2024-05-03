@@ -86,7 +86,16 @@ public class AnswerResponse {
     private Answer parentAnswer;
     @OneToMany(mappedBy = "answerResponse")
     private List<Favorite> favorites;
+    @OneToMany(mappedBy = "answerResponse")
+    private Set<Vote> votes = new HashSet<>();
 
+    public Set<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<Vote> votes) {
+        this.votes = votes;
+    }
 
     public List<Favorite> getFavorites() {
         return favorites;
