@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
 
+import com.bezkoder.spring.security.postgresql.Dto.RoleUpdateRequest;
 import com.bezkoder.spring.security.postgresql.Dto.UserDto;
 import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.User;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
@@ -39,5 +41,10 @@ public class UserController {
     @PutMapping("/user/{id}")
     public User updateUser(@RequestBody User newUser, @PathVariable Long id) {
         return userService.updateUser(newUser, id);
+    }
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateUserRole(@PathVariable(value = "id") Long userId, @RequestBody RoleUpdateRequest request) {
+        userService.updateUserRole(userId, request.getNewRoleName());
+        return ResponseEntity.ok().body("User role updated successfully");
     }
 }

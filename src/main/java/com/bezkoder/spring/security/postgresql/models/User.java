@@ -93,11 +93,6 @@ public class User {
   private Set<Role> roles = new HashSet<>();
 
 
-
-
-
-
-
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   @JsonIgnore
   private Set<Question> questions = new HashSet<>();
@@ -131,9 +126,6 @@ public class User {
   public void setReputation(Reputation reputation) {
     this.reputation = reputation;
   }
-
-
-
 
   public Set<Message> getSentMessages() {
     return sentMessages;

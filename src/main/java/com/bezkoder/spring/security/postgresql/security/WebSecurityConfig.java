@@ -117,7 +117,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
       configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:8080")); // remplacez par votre motif spécifique
       configuration.setAllowedMethods(Arrays.asList("GET","POST", "PUT", "DELETE"));
       configuration.setAllowedHeaders(Arrays.asList("*"));
-      configuration.setAllowCredentials(true); // Autoriser les credentials
+      configuration.setAllowCredentials(true);
       return configuration;
     }));
 
