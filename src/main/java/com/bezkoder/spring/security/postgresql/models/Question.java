@@ -30,7 +30,18 @@ public class Question {
 
     @Lob
     private byte[] file;
+
+    public Boolean getUserAnonymous() {
+        return isUserAnonymous;
+    }
+
+    public void setUserAnonymous(Boolean userAnonymous) {
+        isUserAnonymous = userAnonymous;
+    }
+
     private String contentType;
+    private Boolean isUserAnonymous = false;
+
 
     public String getContentType() {
         return contentType;

@@ -37,11 +37,12 @@ public class QuestionController {
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         Long tagId = questionRequestWrapper.getTagId();
+        Boolean isUserAnonymous = questionRequestWrapper.getUserAnonymous();
         if (tagId == null) {
             return ResponseEntity.badRequest().body("Tag ID must not be null");
         }
 
-        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagId);
+        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagId, isUserAnonymous); // include isUserAnonymous in the method call
 
         return ResponseEntity.ok(new MessageResponse("Question created and associated with tag successfully!"));
     }

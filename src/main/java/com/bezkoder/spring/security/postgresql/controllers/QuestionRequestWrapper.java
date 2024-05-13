@@ -8,6 +8,16 @@ public class QuestionRequestWrapper {
     private MultipartFile file;
     private Long tagId;
 
+    public Boolean getUserAnonymous() {
+        return isUserAnonymous;
+    }
+
+    public void setUserAnonymous(Boolean userAnonymous) {
+        isUserAnonymous = userAnonymous;
+    }
+
+    private Boolean isUserAnonymous;
+
     public Long getTagId() {
         return tagId;
     }
