@@ -54,6 +54,7 @@ public class QuestionServiceImp implements QuestionService{
                 searchRequest.getTitle(),
                 searchRequest.getContent(),
                 searchRequest.getUserId(),
+                searchRequest.getTags(),
                 pageable
         );
 
@@ -85,31 +86,33 @@ public class QuestionServiceImp implements QuestionService{
 
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new RuntimeException("Tag not found"));
+for (int i=0 ; i<10; i++) {
+    Question question = new Question();
+    question.setTitle(questionRequest.getTitle()+i);
+    question.setContent(questionRequest.getContent()+i);
+    question.setUser(user);
+    question.setCreatedAt(new Date());
+    question.getTags().add(tag);
 
-        Question question = new Question();
-        question.setTitle(questionRequest.getTitle());
-        question.setContent(questionRequest.getContent());
-        question.setUser(user);
-        question.setCreatedAt(new Date());
-        question.getTags().add(tag);
+    if (file != null) {
+        // Check the file type
+        String contentType = file.getContentType();
 
-        if (file != null) {
-            // Check the file type
-            String contentType = file.getContentType();
-
-            if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
-                throw new RuntimeException("Unsupported file type");
-            }
-
-            try {
-                question.setFile(file.getBytes());
-                question.setContentType(file.getContentType());
-            } catch (IOException e) {
-                throw new RuntimeException("Error reading file", e);
-            }
+        if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
+            throw new RuntimeException("Unsupported file type");
         }
 
-        return questionRepository.save(question);
+        try {
+            question.setFile(file.getBytes());
+            question.setContentType(file.getContentType());
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading file", e);
+        }
+    }
+
+     questionRepository.save(question);
+}
+return null;
     }
     public void associateTagWithQuestion(Long questionId, Long tagId) {
         Question question = questionRepository.findById(questionId)

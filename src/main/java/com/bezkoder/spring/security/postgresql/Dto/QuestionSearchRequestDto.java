@@ -1,11 +1,21 @@
 package com.bezkoder.spring.security.postgresql.Dto;
 
-public class QuestionSearchRequestDto {
+import java.util.List;
+
+public class QuestionSearchRequestDto extends SearchList{
 
         private String title;
         private String content;
         private Long userId;
-        private int pageIndex;
+    private List<String> tags;
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 
     public String getTitle() {
         return title;
@@ -31,24 +41,10 @@ public class QuestionSearchRequestDto {
         this.userId = userId;
     }
 
-    public int getPageIndex() {
-        return pageIndex;
-    }
 
-    public void setPageIndex(int pageIndex) {
-        this.pageIndex = pageIndex;
-    }
 
-    public int getPageSize() {
-        return pageSize;
-    }
 
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
 
-    private int pageSize;
 
-        // Getters and setters
 
 }

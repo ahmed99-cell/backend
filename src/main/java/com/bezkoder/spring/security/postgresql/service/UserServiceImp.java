@@ -80,14 +80,7 @@ public class UserServiceImp implements UserService{
             user.setPassword(encryptedPassword);
 
             // Clear existing roles and add new roles
-            if (newUser.getRoles() != null && !newUser.getRoles().isEmpty()) {
-                user.getRoles().clear();
-                for (Role role : newUser.getRoles()) {
-                    Role dbRole = roleRepository.findByName(role.getName())
-                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                    user.getRoles().add(dbRole);
-                }
-            }
+
 
             return userRepository.save(user);
         }).orElseThrow(() -> new UserNotFoundException(matricule));

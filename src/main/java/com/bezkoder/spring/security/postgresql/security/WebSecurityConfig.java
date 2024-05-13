@@ -27,6 +27,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.context.annotation.Configuration;
+
 
 import java.util.Arrays;
 
@@ -38,7 +40,7 @@ import java.util.Arrays;
 @EnableSwagger2
 
 
-public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig implements WebMvcConfigurer { // extends WebSecurityConfigurerAdapter {
   private boolean swaggerEnabled;
   @Autowired
   UserDetailsServiceImpl userDetailsService;
@@ -55,15 +57,22 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 //  public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
 //    authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
 //  }
-  
+
   @Bean
   public DaoAuthenticationProvider authenticationProvider() {
-      DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-       
-      authProvider.setUserDetailsService(userDetailsService);
-      authProvider.setPasswordEncoder(passwordEncoder());
-   
-      return authProvider;
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
+    authProvider.setUserDetailsService(userDetailsService);
+    authProvider.setPasswordEncoder(passwordEncoder());
+
+    return authProvider;
+  }
+
+  public void addCorsMappings(CorsRegistry registry) {
+    registry.addMapping("/**")
+            .allowedOrigins("*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedHeaders("*");
   }
   @Bean
   public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
@@ -77,7 +86,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 //  public AuthenticationManager authenticationManagerBean() throws Exception {
 //    return super.authenticationManagerBean();
 //  }
-  
+
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
     return authConfig.getAuthenticationManager();
@@ -108,18 +117,11 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(this.unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(authorize -> authorize
-                    .antMatchers("/api/auth/**", "/api/test/**", "/ws/**").permitAll()
+                    .antMatchers("/api/**", "/api/test/**", "/ws/**").permitAll()
                     .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
             );
-    http.cors(cors -> cors.configurationSource(request -> {
-      CorsConfiguration configuration = new CorsConfiguration();
-      configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:8080")); // remplacez par votre motif spécifique
-      configuration.setAllowedMethods(Arrays.asList("GET","POST", "PUT", "DELETE"));
-      configuration.setAllowedHeaders(Arrays.asList("*"));
-      configuration.setAllowCredentials(true);
-      return configuration;
-    }));
+
 
     http.authenticationProvider(authenticationProvider());
 
