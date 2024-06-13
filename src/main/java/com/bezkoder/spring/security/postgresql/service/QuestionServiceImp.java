@@ -8,6 +8,7 @@ import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
 import com.bezkoder.spring.security.postgresql.repository.*;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,8 @@ public class QuestionServiceImp implements QuestionService{
     @Autowired
     QuestionRepositoryCustom questionRepositoryCustom;
 
+    @Autowired
+    private VoteRepository voteRepository;
 
     @Override
     public List<QuestionDto> getAllQuestions(QuestionSearchRequestDto searchRequest) {
@@ -55,6 +58,7 @@ public class QuestionServiceImp implements QuestionService{
                 searchRequest.getContent(),
                 searchRequest.getUserId(),
                 searchRequest.getTags(),
+                searchRequest.getUserAnonymous(),
                 pageable
         );
 
@@ -62,7 +66,10 @@ public class QuestionServiceImp implements QuestionService{
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
-
+   @Override
+    public List<Question> getQuestionsByTag(String tagName) {
+        return questionRepository.findByTagsName(tagName);
+    }
     @Override
     public QuestionDto mapToDto(Question question) {
         QuestionDto dto = new QuestionDto();
@@ -76,54 +83,81 @@ public class QuestionServiceImp implements QuestionService{
         dto.setCreatedAt(question.getCreatedAt());
         dto.setUpdatedAt(question.getUpdatedAt());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
+        dto.setViews(question.getViews());
+        int voteCount = question.getVotes().size();
+        dto.setVoteCount(voteCount);
 
+        int answerCount = question.getAnswers().size();
+        dto.setAnswerCount(answerCount);
         return dto;
     }
     @Override
-    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, Long tagId, Boolean isUserAnonymous) {
+    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, List<Long> tagIds, Boolean isUserAnonymous) {
         if (questionRequest == null) {
             throw new IllegalArgumentException("QuestionRequest cannot be null");
         }
 
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        Tag tag = tagRepository.findById(tagId).orElseThrow(() -> new RuntimeException("Tag not found"));
+        List<Tag> tags = tagRepository.findAllById(tagIds);
+        if (tags.size() != tagIds.size()) {
+            // Check if all tags were found
+            throw new RuntimeException("Some tags were not found");
+        }
 
-            Question question = new Question();
-            question.setTitle(questionRequest.getTitle() );
-            question.setContent(questionRequest.getContent() );
-            question.setUser(user);
-            question.setCreatedAt(new Date());
-            question.getTags().add(tag);
-            question.setUserAnonymous(isUserAnonymous);
+        Question question = new Question();
+        question.setTitle(questionRequest.getTitle());
+        question.setContent(questionRequest.getContent());
+        question.setUser(user);
+        question.setCreatedAt(new Date());
+        question.getTags().addAll(tags);
+        question.setUserAnonymous(isUserAnonymous);
 
-            if (file != null) {
+        if (file != null) {
+            String contentType = file.getContentType();
 
-                String contentType = file.getContentType();
-
-                if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
-                    throw new RuntimeException("Unsupported file type");
-                }
-
-                try {
-                    question.setFile(file.getBytes());
-                    question.setContentType(file.getContentType());
-                } catch (IOException e) {
-                    throw new RuntimeException("Error reading file", e);
-                }
+            if (!contentType.equals("image/jpeg") &&
+                    !contentType.equals("image/png") &&
+                    !contentType.equals("application/pdf")) {
+                throw new RuntimeException("Unsupported file type");
             }
 
-            questionRepository.save(question);
+            try {
+                question.setFile(file.getBytes());
+                question.setContentType(file.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading file", e);
+            }
+        }
 
-        return null;
+        questionRepository.save(question);
+        return question;
     }
-    public void associateTagWithQuestion(Long questionId, Long tagId) {
+
+
+    @Override
+    public void associateTagsWithQuestion(Long questionId, List<Long> tagIds) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", questionId));
 
-        Tag tag = tagRepository.findById(tagId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tag", "id", tagId));
+        List<Tag> tags = tagRepository.findAllById(tagIds);
 
-        question.getTags().add(tag);
+        if (tags.size() != tagIds.size()) {
+            // Check if all tags were found
+            throw new ResourceNotFoundException("Some tags were not found");
+        }
+
+        question.getTags().addAll(tags);
+        questionRepository.save(question);
+    }
+
+    @Override
+    public void incrementViewCount(Long questionId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+
+        int currentViewCount = question.getViews();
+        question.setViews(currentViewCount + 1);
+
         questionRepository.save(question);
     }
 
@@ -186,15 +220,24 @@ public class QuestionServiceImp implements QuestionService{
     public List<Answer> getAnswersByQuestionId(Long questionId) {
         return answerRepository.findByQuestionId(questionId);
     }
+    public Map<Long, Integer> getTotalVotesForAnswers(List<Long> answerIds) {
+        Map<Long, Integer> votesMap = new HashMap<>();
+        for (Long answerId : answerIds) {
+            int totalVotes = voteRepository.sumValuesByEntityIds(answerId);
+            votesMap.put(answerId, totalVotes);
+        }
+        return votesMap;
+    }
 
     @Override
-    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username) {
+    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,byte[] imageData) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         Question question = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Question not found"));
         Answer answer = new Answer();
         answer.setContent(answerRequest.getContent());
         answer.setUser(user);
         answer.setQuestion(question);
+        answer.setFile(imageData);
         answer.setCreatedAt(new Date());
         Answer savedAnswer = answerRepository.save(answer);
 
@@ -330,15 +373,30 @@ public class QuestionServiceImp implements QuestionService{
 
     @Override
     public List<Question> getQuestionsWithAnswers() {
-        return questionRepository.findAll().stream()
+        List<Question> questions = questionRepository.findAll().stream()
                 .filter(question -> !question.getAnswers().isEmpty())
                 .collect(Collectors.toList());
+
+        // Initialize the user field for each question
+        for (Question question : questions) {
+            Hibernate.initialize(question.getUser());
+        }
+
+        return questions;
     }
+
+
 
     @Override
     public List<Question> getQuestionsWithoutAnswers() {
         return questionRepository.findAll().stream()
                 .filter(question -> question.getAnswers().isEmpty())
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<Question> getQuestionsSortedByVotes() {
+        return questionRepository.findAll().stream()
+                .sorted((q1, q2) -> Integer.compare(q2.getVotes().size(), q1.getVotes().size()))
                 .collect(Collectors.toList());
     }
 }

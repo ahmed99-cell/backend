@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-public class VoteServiceImp implements VoteService{
+public class VoteServiceImp implements VoteService {
     @Autowired
     private UserRepository userRepository;
 
@@ -19,27 +19,24 @@ public class VoteServiceImp implements VoteService{
 
     @Autowired
     private AnswerResponseRepository answerResponseRepository;
+
     @Autowired
     private VoteRepository voteRepository;
-
-
-
 
     public ResponseEntity<String> vote(Long userId, Long entityId, String entityType, int value) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Error: User is not found."));
 
         Vote vote = voteRepository.findByUserAndEntityIdAndEntityType(user, entityId, entityType);
-
+System.out.println(vote)   ;
         if (vote != null) {
-            int newValue = vote.getValue() + value;
-            if (newValue >= 0 && newValue <= 1) {
-                vote.setValue(newValue);
+            if (value == 0 || value == 1) {
+                vote.setValue(value);
             } else {
                 throw new RuntimeException("Error: Vote value is not valid.");
             }
         } else {
-            if (value >= 0 && value <= 1) {
+            if (value >= -1 && value <= 1) {
                 vote = new Vote();
                 vote.setUser(user);
                 vote.setEntityId(entityId);
@@ -66,11 +63,23 @@ public class VoteServiceImp implements VoteService{
                         throw new RuntimeException("Error: Invalid entityType.");
                 }
             } else {
-                throw new RuntimeException("Error: Vote value is not valid.");
+                throw new RuntimeException("Error: Vote value is not valid2.");
             }
         }
 
         voteRepository.save(vote);
         return ResponseEntity.ok("Vote successful");
     }
+
+
+
+    public int getVoteValue(Long userId, Long entityId, String entityType) {
+
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Error: User is not found."));
+        Vote vote = voteRepository.findByUserAndEntityIdAndEntityType(user, entityId, entityType);
+        return vote != null ? vote.getValue() : -1; // Assuming -1 means no vote
+    }
 }
+

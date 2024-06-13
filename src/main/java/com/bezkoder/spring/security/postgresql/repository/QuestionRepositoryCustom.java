@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface QuestionRepositoryCustom {
-    List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags, Pageable pageable);
+    List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags,Boolean userAnonymous, Pageable pageable);
 }

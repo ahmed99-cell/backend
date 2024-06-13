@@ -6,6 +6,7 @@ import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import com.bezkoder.spring.security.postgresql.payload.response.MessageResponse;
+import com.bezkoder.spring.security.postgresql.repository.QuestionRepository;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
 import com.bezkoder.spring.security.postgresql.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -29,28 +34,38 @@ public class QuestionController {
     @Autowired
     private TagService tagService;
 
+
+
+
     @PostMapping("/all")
     public List<QuestionDto> getAllQuestions(@RequestBody QuestionSearchRequestDto searchRequest) {
+
         return questionService.getAllQuestions(searchRequest);
     }
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
-        Long tagId = questionRequestWrapper.getTagId();
         Boolean isUserAnonymous = questionRequestWrapper.getUserAnonymous();
-        if (tagId == null) {
-            return ResponseEntity.badRequest().body("Tag ID must not be null");
+        List<Long> tagIds = questionRequestWrapper.getTagIds(); // Change to receive a list of tag IDs
+        if (tagIds == null || tagIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("Tag IDs must not be null or empty");
         }
 
-        Question question = questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagId, isUserAnonymous); // include isUserAnonymous in the method call
+        questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagIds, isUserAnonymous);
 
-        return ResponseEntity.ok(new MessageResponse("Question created and associated with tag successfully!"));
+        return ResponseEntity.ok(new MessageResponse("Question created and associated with tag(s) successfully!"));
     }
+
+    @GetMapping("/byTag/{tagName}")
+    public ResponseEntity<List<Question>> getQuestionsByTag(@PathVariable String tagName) {
+        List<Question> questions = questionService.getQuestionsByTag(tagName);
+        return ResponseEntity.ok(questions);
+    }
+
     @GetMapping("/files/{id}")
     public ResponseEntity<byte[]> getFile(@PathVariable Long id) {
         Question question = questionService.getQuestionById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
-
         String fileName = question.getTitle();
         byte[] fileContent = question.getFile();
 
@@ -93,6 +108,13 @@ public class QuestionController {
         questionService.deleteQuestion(questionId);
         return ResponseEntity.ok(new MessageResponse("Question deleted successfully!"));
     }
+
+    @PutMapping("/{questionId}/increment-view")
+    public ResponseEntity<?> incrementViewCount(@PathVariable Long questionId) {
+        questionService.incrementViewCount(questionId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{questionId}/answers/{answerId}")
     public ResponseEntity<Answer> getAnswerById(@PathVariable Long questionId, @PathVariable Long answerId) {
         Answer answer = questionService.getAnswerById(questionId, answerId);
@@ -112,14 +134,50 @@ public class QuestionController {
 
 
     @GetMapping("/{questionId}/answers")
-    public List<Answer> getAnswersByQuestionId(@PathVariable Long questionId) {
-        return questionService.getAnswersByQuestionId(questionId);
+    public ResponseEntity<List<Map<String, Object>>> getAnswersByQuestionId(@PathVariable Long questionId) {
+        List<Answer> answers = questionService.getAnswersByQuestionId(questionId);
+        List<Long> answerIds = answers.stream().map(Answer::getId).collect(Collectors.toList());
+        Map<Long, Integer> votesMap = questionService.getTotalVotesForAnswers(answerIds);
+
+        List<Map<String, Object>> response = answers.stream().map(answer -> {
+            Map<String, Object> answerWithVotes = new HashMap<>();
+            answerWithVotes.put("answer", answer);
+            answerWithVotes.put("totalVotes", votesMap.get(answer.getId()));
+            return answerWithVotes;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
+   /* public List<Answer> getAnswersByQuestionId(@PathVariable Long questionId) {
+        return questionService.getAnswersByQuestionId(questionId);
+    }*/
     @PostMapping("/{questionId}/answers")
-    public ResponseEntity<?> createAnswer(@PathVariable Long questionId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        Answer answer = questionService.createAnswer(questionId, answerRequest, username);
-        return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
+    public ResponseEntity<?> createAnswer(@PathVariable Long questionId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails, @RequestParam(value = "file", required = false) MultipartFile image) {
+        try {
+            // Récupérer le nom d'utilisateur de l'utilisateur authentifié
+            String username = userDetails.getUsername();
+
+            // Vérifier si une image est présente dans la requête
+            if (image != null && !image.isEmpty()) {
+                // Convertir l'image en tableau d'octets
+                byte[] imageData = image.getBytes();
+
+                // Appeler le service pour créer la réponse avec les données de l'image
+                Answer answer = questionService.createAnswer(questionId, answerRequest, username, imageData);
+
+                // Répondre avec un message de succès
+                return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
+            } else {
+                // Si aucune image n'est présente, appeler le service pour créer la réponse sans données d'image
+                Answer answer = questionService.createAnswer(questionId, answerRequest, username, null);
+
+                // Répondre avec un message de succès
+                return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
+            }
+        } catch (IOException e) {
+            // En cas d'erreur lors du traitement de l'image, répondre avec un message d'erreur
+            return ResponseEntity.badRequest().body(new MessageResponse("Failed to upload image: " + e.getMessage()));
+        }
     }
     @PostMapping("/{questionId}/answers/{parentAnswerId}/responses")
     public ResponseEntity<?> createResponseToAnswer(@PathVariable Long questionId, @PathVariable Long parentAnswerId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails) {
@@ -166,6 +224,9 @@ public class QuestionController {
     public ResponseEntity<List<Question>> getQuestionsWithoutAnswers() {
         return ResponseEntity.ok(questionService.getQuestionsWithoutAnswers());
     }
-
-
+    @GetMapping("/sorted-by-votes")
+    public ResponseEntity<List<Question>> getQuestionsSortedByVotes() {
+        List<Question> questions = questionService.getQuestionsSortedByVotes();
+        return ResponseEntity.ok(questions);
+    }
 }

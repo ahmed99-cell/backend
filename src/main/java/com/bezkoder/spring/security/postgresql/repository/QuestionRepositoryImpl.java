@@ -20,7 +20,7 @@ public class QuestionRepositoryImpl implements QuestionRepositoryCustom{
     @PersistenceContext
     private EntityManager entityManager;
     @Transactional
-    public List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags, Pageable pageable) {
+    public List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags,Boolean isUserAnonymous, Pageable pageable) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Question> cq = cb.createQuery(Question.class);
 
@@ -43,7 +43,9 @@ public class QuestionRepositoryImpl implements QuestionRepositoryCustom{
         if (matricule != null) {
             predicates.add(cb.equal(question.get("user").get("matricule"), matricule));
         }
-
+        if (isUserAnonymous != null) {
+            predicates.add(cb.equal(question.get("isUserAnonymous"), isUserAnonymous));
+        }
         cq.orderBy(cb.desc(question.get("createdAt")), cb.desc(question.get("updatedAt")));
         cq.where(predicates.toArray(new Predicate[0]));
 

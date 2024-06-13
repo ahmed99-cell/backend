@@ -3,11 +3,20 @@ package com.bezkoder.spring.security.postgresql.controllers;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 public class QuestionRequestWrapper {
     private QuestionRequest questionRequest;
     private MultipartFile file;
-    private Long tagId;
+    private List<Long> tagIds; // Add field for tag IDs
 
+    public List<Long> getTagIds() {
+        return tagIds;
+    }
+
+    public void setTagIds(List<Long> tagIds) {
+        this.tagIds = tagIds;
+    }
     public Boolean getUserAnonymous() {
         return isUserAnonymous;
     }
@@ -18,13 +27,7 @@ public class QuestionRequestWrapper {
 
     private Boolean isUserAnonymous;
 
-    public Long getTagId() {
-        return tagId;
-    }
 
-    public void setTagId(Long tagId) {
-        this.tagId = tagId;
-    }
 
     public QuestionRequest getQuestionRequest() {
         return questionRequest;

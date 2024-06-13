@@ -45,6 +45,7 @@ public class UserServiceImp implements UserService{
         userDto.setMatricul(user.getMatricule());
         userDto.setEmail(user.getEmail());
         userDto.setNom(user.getNom());
+        userDto.setUsername(user.getUsername());
         userDto.setPrenom(user.getPrenom());
         userDto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName().name())

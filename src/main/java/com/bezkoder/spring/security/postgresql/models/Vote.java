@@ -23,10 +23,14 @@ public class Vote {
     public void setEntityId(Long entityId) {
         this.entityId = entityId;
     }
+    @JsonIgnore
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+
+    @JsonIgnore
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
@@ -89,11 +93,13 @@ public class Vote {
     public void setAnswerResponse(AnswerResponse answerResponse) {
         this.answerResponse = answerResponse;
     }
-
+@JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "answer_id")
 
     private Answer answer;
+    @JsonIgnore
+
     @ManyToOne(fetch = FetchType.LAZY)
 
     @JoinColumn(name = "answer_response_id")
