@@ -19,6 +19,7 @@ public class Answer {
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+
     @JsonIgnore
 
     private User user;
@@ -41,9 +42,6 @@ public class Answer {
 
 
 
-
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     @JsonIgnore
@@ -52,7 +50,7 @@ public class Answer {
     private String content;
 
 
-    @OneToMany(mappedBy = "answer")
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Vote> votes = new HashSet<>();
 
     @OneToMany(mappedBy = "answer")

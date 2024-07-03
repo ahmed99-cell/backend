@@ -1,5 +1,7 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
+import com.bezkoder.spring.security.postgresql.Dto.AnswerDto;
+import com.bezkoder.spring.security.postgresql.Dto.QuestionByIdDto;
 import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
 import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
 import com.bezkoder.spring.security.postgresql.models.*;
@@ -10,6 +12,7 @@ import com.bezkoder.spring.security.postgresql.repository.QuestionRepository;
 import com.bezkoder.spring.security.postgresql.service.QuestionService;
 import com.bezkoder.spring.security.postgresql.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +23,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -35,13 +41,24 @@ public class QuestionController {
     private TagService tagService;
 
 
-
+    @GetMapping("/search")
+    public List<Question> searchQuestions(@RequestParam String keyword) {
+        return questionService.searchQuestions(keyword);
+    }
 
     @PostMapping("/all")
     public List<QuestionDto> getAllQuestions(@RequestBody QuestionSearchRequestDto searchRequest) {
 
         return questionService.getAllQuestions(searchRequest);
     }
+    @GetMapping("/by-user-and-date")
+    public List<Question> getQuestionsByUserIdAndDateRange(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date endDate) {
+        return questionService.findQuestionsByUserIdAndDateRange(userId, startDate, endDate);
+    }
+
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
@@ -62,9 +79,11 @@ public class QuestionController {
         return ResponseEntity.ok(questions);
     }
 
+
+
     @GetMapping("/files/{id}")
     public ResponseEntity<byte[]> getFile(@PathVariable Long id) {
-        Question question = questionService.getQuestionById(id)
+        QuestionByIdDto question = questionService.getQuestionById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
         String fileName = question.getTitle();
         byte[] fileContent = question.getFile();
@@ -93,16 +112,24 @@ public class QuestionController {
     }
 
     @GetMapping("/{questionId}")
-    public ResponseEntity<Question> getQuestionById(@PathVariable Long questionId) {
-        Question question = questionService.getQuestionById(questionId)
+    public ResponseEntity<QuestionByIdDto> getQuestionById(@PathVariable Long questionId) {
+        QuestionByIdDto questionDto = questionService.getQuestionById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
-        return ResponseEntity.ok().body(question);
+        return ResponseEntity.ok().body(questionDto);
     }
-    @PutMapping("/{questionId}")
-    public ResponseEntity<?> updateQuestion(@PathVariable Long questionId, @Valid @RequestBody QuestionRequest questionRequest) {
-        Question question = questionService.updateQuestion(questionId, questionRequest);
+
+
+    @PutMapping(value = "/{questionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateQuestion(
+            @PathVariable Long questionId,
+            @RequestPart("questionRequest") QuestionRequest questionRequest,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        Question question = questionService.updateQuestion(questionId, questionRequest, file);
         return ResponseEntity.ok(new MessageResponse("Question updated successfully!"));
     }
+
+
     @DeleteMapping("/{questionId}")
     public ResponseEntity<?> deleteQuestion(@PathVariable Long questionId) {
         questionService.deleteQuestion(questionId);
@@ -131,6 +158,14 @@ public class QuestionController {
         return ResponseEntity.ok(new MessageResponse("Answer deleted successfully!"));
     }
 
+    @GetMapping("/byuseranddate")
+    public List<Answer> getAnswersByUserIdAndDateRange(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date endDate) {
+        return questionService.findAnswersByUserIdAndDateRange(userId, startDate, endDate);
+    }
+
 
 
     @GetMapping("/{questionId}/answers")
@@ -148,9 +183,8 @@ public class QuestionController {
 
         return ResponseEntity.ok(response);
     }
-   /* public List<Answer> getAnswersByQuestionId(@PathVariable Long questionId) {
-        return questionService.getAnswersByQuestionId(questionId);
-    }*/
+
+
     @PostMapping("/{questionId}/answers")
     public ResponseEntity<?> createAnswer(@PathVariable Long questionId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails, @RequestParam(value = "file", required = false) MultipartFile image) {
         try {
@@ -179,6 +213,8 @@ public class QuestionController {
             return ResponseEntity.badRequest().body(new MessageResponse("Failed to upload image: " + e.getMessage()));
         }
     }
+
+
     @PostMapping("/{questionId}/answers/{parentAnswerId}/responses")
     public ResponseEntity<?> createResponseToAnswer(@PathVariable Long questionId, @PathVariable Long parentAnswerId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();

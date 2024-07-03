@@ -17,4 +17,7 @@ public interface VoteRepository extends JpaRepository<Vote,Long> {
 
     @Query("SELECT COALESCE(SUM(v.value), 0) FROM Vote v WHERE v.entityId = :entityId AND v.entityType = 'ANSWER'")
     int sumValuesByEntityIds(@Param("entityId") Long entityId);
+
+
+
 }

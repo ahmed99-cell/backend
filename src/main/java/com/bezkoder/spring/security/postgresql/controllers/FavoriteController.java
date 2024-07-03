@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
 import com.bezkoder.spring.security.postgresql.models.Favorite;
+import com.bezkoder.spring.security.postgresql.models.Question;
 import com.bezkoder.spring.security.postgresql.service.FavoriteServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +46,14 @@ private FavoriteServiceImp favoriteService;
     @PostMapping("/markAnswerResponseAsFavorite/{answerResponseId}")
     public ResponseEntity<Favorite> markAnswerResponseAsFavorite(@PathVariable Long answerResponseId) {
         return ResponseEntity.ok(favoriteService.markAnswerResponseAsFavorite(answerResponseId));
+    }
+    @PutMapping("/toggleFavorite/{id}")
+    public ResponseEntity<Favorite> toggleFavorite(@PathVariable Long id) {
+        return ResponseEntity.ok(favoriteService.toggleFavorite(id));
+    }
+    @GetMapping("/favorit/{userId}")
+    public ResponseEntity<List<Question>> getFavoritesByUserId(@PathVariable Long userId) {
+        List<Question> favorites = favoriteService.getFavoritesByUserId(userId);
+        return ResponseEntity.ok().body(favorites);
     }
 }

@@ -5,22 +5,21 @@ import lombok.Setter;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 @Getter
 @Setter
-public class QuestionDto {
-    private Long id;
-    private String title;
+public class QuestionByIdDto {
+    private Long Id;
+    private byte[] file;
+    private String contentType;
+    private List<AnswerDto> answers;
+    private List<FavoriteDto> favorites;
     private String content;
     private String username;
     private Date createdAt;
     private Date updatedAt;
-    private int views;
-
-    private List<Map<String, Object>> favorites;
-
     private Set<String> tags;
-    private int voteCount;
-    private int answerCount;
+    private String Title;
+
+
 }

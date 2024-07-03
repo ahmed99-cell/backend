@@ -9,6 +9,8 @@ public class QuestionRequest {
     @NotBlank
     private String content;
 
+     @NotBlank
+    private Byte File ;
 
     public String getTitle() {
         return title;
@@ -24,5 +26,13 @@ public class QuestionRequest {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Byte getFile() {
+        return File;
+    }
+
+    public void setFile(Byte file) {
+        File = file;
     }
 }

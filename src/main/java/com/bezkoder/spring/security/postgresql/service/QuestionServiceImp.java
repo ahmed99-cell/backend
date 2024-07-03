@@ -1,7 +1,6 @@
 package com.bezkoder.spring.security.postgresql.service;
 
-import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
-import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
+import com.bezkoder.spring.security.postgresql.Dto.*;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
@@ -66,10 +65,28 @@ public class QuestionServiceImp implements QuestionService{
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
+@Override
+    public List<Question> searchQuestions(String keyword) {
+        return questionRepository.searchQuestions(keyword);
+    }
+
+
+
+
+    @Override
+    public List<Question> findQuestionsByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
+        return questionRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+    }
+    @Override
+    public List<Answer> findAnswersByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
+        return answerRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+    }
    @Override
     public List<Question> getQuestionsByTag(String tagName) {
         return questionRepository.findByTagsName(tagName);
     }
+
+
     @Override
     public QuestionDto mapToDto(Question question) {
         QuestionDto dto = new QuestionDto();
@@ -84,7 +101,19 @@ public class QuestionServiceImp implements QuestionService{
         dto.setUpdatedAt(question.getUpdatedAt());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
         dto.setViews(question.getViews());
+        //dto.setFavorites(question.getFavorites().stream().map(Favorite::isMarkedAsFavorite).collect(Collectors.toList()));
+        dto.setFavorites(question.getFavorites().stream()
+                .map(favorite -> {
+                    Map<String, Object> favoriteMap = new HashMap<>();
+                    favoriteMap.put("id", favorite.getId());
+                    favoriteMap.put("markedAsFavorite", favorite.isMarkedAsFavorite());
+                    return favoriteMap;
+                })
+                .collect(Collectors.toList()));
+
         int voteCount = question.getVotes().size();
+
+
         dto.setVoteCount(voteCount);
 
         int answerCount = question.getAnswers().size();
@@ -161,21 +190,82 @@ public class QuestionServiceImp implements QuestionService{
         questionRepository.save(question);
     }
 
+
     @Override
-    public Optional<Question> getQuestionById(Long id) {
-        return questionRepository.findById(id);
+    public Optional<QuestionByIdDto> getQuestionById(Long id) {
+        return questionRepository.findById(id).map(this::maptoDto);
+    }
+    private QuestionByIdDto maptoDto(Question question) {
+        QuestionByIdDto dto = new QuestionByIdDto();
+        dto.setId(question.getId());
+        dto.setTitle(question.getTitle());
+        dto.setContent(question.getContent());
+        dto.setUsername(question.getUser().getUsername());
+        dto.setCreatedAt(question.getCreatedAt());
+        dto.setUpdatedAt(question.getUpdatedAt());
+        dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
+        dto.setFile(question.getFile()); // Ajoutez cette ligne
+        dto.setContentType(question.getContentType());
+        dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
+        dto.setAnswers(question.getAnswers().stream().map(this::mapAnswerToDto).collect(Collectors.toList()));
+        dto.setFavorites(question.getFavorites().stream().map(this::mapFavoriteToDto).collect(Collectors.toList()));
+
+        return dto;
+
+
+    }
+    @Override
+    public AnswerDto mapAnswerToDto(Answer answer) {
+        AnswerDto dto = new AnswerDto();
+        dto.setId(answer.getId());
+        dto.setContent(answer.getContent());
+        dto.setUsername(answer.getUser().getUsername());
+        dto.setCreatedAt(answer.getCreatedAt().toString());
+        dto.setUpdatedAt(answer.getUpdatedAt() != null ? answer.getUpdatedAt().toString() : null);
+        dto.setResponses(answer.getResponses().stream().map(AnswerResponse::getContent).collect(Collectors.toList()));
+
+        dto.setVotes(answer.getVotes().stream().map(Vote::toString).collect(Collectors.toList()));
+        dto.setFavorites(answer.getFavorites().stream().map(Favorite::toString).collect(Collectors.toList()));
+        return dto;
+    }
+    @Override
+    public AnswerResponseDto mapToAnswerResponseDto(AnswerResponse answerResponse) {
+        AnswerResponseDto dto = new AnswerResponseDto();
+        dto.setId(answerResponse.getId());
+        dto.setContent(answerResponse.getContent());
+        dto.setUsername(answerResponse.getUser().getUsername());
+        dto.setCreatedAt(answerResponse.getCreatedAt().toString());
+        dto.setUpdatedAt(answerResponse.getUpdatedAt() != null ? answerResponse.getUpdatedAt().toString() : null);
+        dto.setVotes(answerResponse.getVotes().stream().map(Vote::toString).collect(Collectors.toList()));
+        dto.setFavorites(answerResponse.getFavorites().stream().map(Favorite::toString).collect(Collectors.toList()));
+        return dto;
+    }
+
+
+
+    private FavoriteDto mapFavoriteToDto(Favorite favorite) {
+        FavoriteDto dto = new FavoriteDto();
+        dto.setId(favorite.getId());
+        dto.setUsername(favorite.getUser().getUsername());
+        return dto;
     }
 
 
     @Override
-    public Question updateQuestion(Long questionId, QuestionRequest questionRequest) {
+    public Question updateQuestion(Long questionId, QuestionRequest questionRequest, MultipartFile file) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
+
         question.setTitle(questionRequest.getTitle());
         question.setContent(questionRequest.getContent());
         question.setUpdatedAt(new Date());
+        questionRequest.setFile(questionRequest.getFile());
+
+
+
         return questionRepository.save(question);
     }
+
 
     @Override
     public void deleteQuestion(Long questionId) {
@@ -183,6 +273,8 @@ public class QuestionServiceImp implements QuestionService{
                 .orElseThrow(() -> new RuntimeException("Question not found"));
         questionRepository.delete(question);
     }
+
+
 
     @Override
     public Answer getAnswerById(Long questionId, Long answerId) {
@@ -253,6 +345,7 @@ public class QuestionServiceImp implements QuestionService{
 
         return savedAnswer;
     }
+
 
     @Override
     public AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username) {

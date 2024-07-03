@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 
@@ -111,4 +112,22 @@ public class FavoriteServiceImp implements FavoriteService{
             throw new RuntimeException("Utilisateur non connecté");
         }
     }
+    public Favorite toggleFavorite(Long id) {
+        Favorite favorite = favoriteRepository.findById(id).orElseThrow(() -> new RuntimeException("Favorite not found"));
+        favorite.setMarkedAsFavorite(!favorite.isMarkedAsFavorite());
+        return favoriteRepository.save(favorite);
+    }
+
+    @Override
+    public List<Question> getFavoritesByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + userId));
+
+        List<Favorite> nonFavoriteFavorites = favoriteRepository.findByUserAndMarkedAsFavorite(user, false);
+
+        return nonFavoriteFavorites.stream()
+                .map(Favorite::getQuestion)
+                .collect(Collectors.toList());
+    }
+
 }
