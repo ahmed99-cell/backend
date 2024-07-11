@@ -17,13 +17,13 @@ public class Answer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
 
     @JsonIgnore
 
     private User user;
-    @OneToMany(mappedBy = "parentAnswer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parentAnswer", cascade = CascadeType.ALL, orphanRemoval = true , fetch = FetchType.EAGER)
     private Set<AnswerResponse> responses = new HashSet<>();
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
@@ -50,9 +50,9 @@ public class Answer {
     private String content;
 
 
-    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private Set<Vote> votes = new HashSet<>();
 
-    @OneToMany(mappedBy = "answer")
+    @OneToMany(mappedBy = "answer",fetch = FetchType.EAGER)
     private List<Favorite> favorites;
 }

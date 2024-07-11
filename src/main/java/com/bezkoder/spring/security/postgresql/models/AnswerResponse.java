@@ -84,9 +84,9 @@ public class AnswerResponse {
     @JoinColumn(name = "parent_answer_id")
     @JsonIgnore
     private Answer parentAnswer;
-    @OneToMany(mappedBy = "answerResponse")
+    @OneToMany(mappedBy = "answerResponse",fetch = FetchType.EAGER)
     private List<Favorite> favorites;
-    @OneToMany(mappedBy = "answerResponse")
+    @OneToMany(mappedBy = "answerResponse",fetch = FetchType.EAGER)
     private Set<Vote> votes = new HashSet<>();
 
     public Set<Vote> getVotes() {

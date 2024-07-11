@@ -41,11 +41,15 @@ public class VoteController {
             @RequestParam String entityType,
             @RequestParam Long userId) {
         int voteValue = voteService.getVoteValue(userId, entityId, entityType);
-        OptionalInt totalVotesOptional = OptionalInt.of(voteRepository.sumValuesByEntityId(entityId));
-        int totalVotes = totalVotesOptional.orElse(0);
+
+        // Safely handle null value from repository
+        Integer totalVotesFromRepo = voteRepository.sumValuesByEntityId(entityId);
+        int totalVotes = (totalVotesFromRepo != null) ? totalVotesFromRepo : 0;
+
         Map<String, Integer> response = new HashMap<>();
         response.put("value", voteValue);
-        response.put("totalVotes", totalVotes); // Convertir long en int pour mettre dans le Map
+        response.put("totalVotes", totalVotes);
+
         return ResponseEntity.ok(response);
-    }
-}
+    }}
+

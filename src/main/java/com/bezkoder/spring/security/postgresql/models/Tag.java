@@ -1,9 +1,12 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @AllArgsConstructor
@@ -31,6 +34,19 @@ public class Tag {
         this.name = name;
     }
 
+    public Set<Question> getQuestions() {
+        return questions;
+    }
+
+    public void setQuestions(Set<Question> questions) {
+        this.questions = questions;
+    }
+
+    @ManyToMany(mappedBy = "tags",fetch =FetchType.EAGER )
+    @JsonManagedReference
+
+    private Set<Question> questions = new HashSet<>();
+
     private String name ;
 private String description ;
 
@@ -41,4 +57,5 @@ private String description ;
     public void setDescription(String description) {
         this.description = description;
     }
+
 }

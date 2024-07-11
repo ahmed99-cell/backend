@@ -14,6 +14,7 @@ import com.bezkoder.spring.security.postgresql.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -52,11 +53,18 @@ public class QuestionController {
         return questionService.getAllQuestions(searchRequest);
     }
     @GetMapping("/by-user-and-date")
-    public List<Question> getQuestionsByUserIdAndDateRange(
+    public ResponseEntity<List<Question>> getQuestionsByUserIdAndDateRange(
             @RequestParam Long userId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date endDate) {
-        return questionService.findQuestionsByUserIdAndDateRange(userId, startDate, endDate);
+        try {
+            List<Question> questions = questionService.findQuestionsByUserIdAndDateRange(userId, startDate, endDate);
+            return new ResponseEntity<>(questions, HttpStatus.OK);
+        } catch (Exception e) {
+            // Log the exception and return an appropriate error response
+            System.err.println("Error fetching questions: " + e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -128,6 +136,7 @@ public class QuestionController {
         Question question = questionService.updateQuestion(questionId, questionRequest, file);
         return ResponseEntity.ok(new MessageResponse("Question updated successfully!"));
     }
+
 
 
     @DeleteMapping("/{questionId}")

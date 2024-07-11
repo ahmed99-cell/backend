@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 public interface VoteRepository extends JpaRepository<Vote,Long> {
     Vote findByUserAndEntityIdAndEntityType(User user, Long entityId, String entityType);
     @Query("SELECT SUM(v.value) FROM Vote v WHERE v.entityId = :entityId")
-    int sumValuesByEntityId(Long entityId);
+    Integer sumValuesByEntityId(@Param("entityId") Long entityId);
 
 
 

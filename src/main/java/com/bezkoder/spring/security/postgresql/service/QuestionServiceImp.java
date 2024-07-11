@@ -50,6 +50,7 @@ public class QuestionServiceImp implements QuestionService{
     private VoteRepository voteRepository;
 
     @Override
+    @Transactional
     public List<QuestionDto> getAllQuestions(QuestionSearchRequestDto searchRequest) {
         Pageable pageable = PageRequest.of(searchRequest.getPageIndex(), searchRequest.getPageSize());
         List<Question> questions = questionRepositoryCustom.findByCriteria(
@@ -73,14 +74,19 @@ public class QuestionServiceImp implements QuestionService{
 
 
 
+    @Transactional
     @Override
     public List<Question> findQuestionsByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
         return questionRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
     }
+    @Transactional
+
     @Override
+
     public List<Answer> findAnswersByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
         return answerRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
     }
+    @Transactional
    @Override
     public List<Question> getQuestionsByTag(String tagName) {
         return questionRepository.findByTagsName(tagName);
@@ -180,6 +186,7 @@ public class QuestionServiceImp implements QuestionService{
     }
 
     @Override
+    @Transactional
     public void incrementViewCount(Long questionId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
@@ -192,6 +199,7 @@ public class QuestionServiceImp implements QuestionService{
 
 
     @Override
+    @Transactional
     public Optional<QuestionByIdDto> getQuestionById(Long id) {
         return questionRepository.findById(id).map(this::maptoDto);
     }
@@ -259,12 +267,20 @@ public class QuestionServiceImp implements QuestionService{
         question.setTitle(questionRequest.getTitle());
         question.setContent(questionRequest.getContent());
         question.setUpdatedAt(new Date());
-        questionRequest.setFile(questionRequest.getFile());
 
-
+        if (file != null && !file.isEmpty()) {
+            try {
+                question.setFile(file.getBytes());
+                question.setContentType(file.getContentType()); // Update content type
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read file", e);
+            }
+        }
 
         return questionRepository.save(question);
     }
+
+
 
 
     @Override

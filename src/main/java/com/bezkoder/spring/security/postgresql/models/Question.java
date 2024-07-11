@@ -1,5 +1,6 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +51,9 @@ public class Question {
 
 
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonBackReference
+
     @JoinTable(
             name = "question_tags",
             joinColumns = @JoinColumn(name = "question_id"),
@@ -59,11 +62,11 @@ public class Question {
     private Set<Tag> tags = new HashSet<>();
 
 
-    @OneToMany(mappedBy = "question")
+    @OneToMany(mappedBy = "question",fetch = FetchType.EAGER)
     private List<Favorite> favorites;
 
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private Set<Vote> votes = new HashSet<>();
 
 
@@ -71,6 +74,6 @@ public class Question {
     private String title;
     @Column(columnDefinition = "TEXT")
     private String content;
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "question",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Answer> answers = new HashSet<>();
 }
