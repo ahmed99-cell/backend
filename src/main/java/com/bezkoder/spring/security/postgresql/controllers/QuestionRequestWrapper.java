@@ -8,7 +8,7 @@ import java.util.List;
 public class QuestionRequestWrapper {
     private QuestionRequest questionRequest;
     private MultipartFile file;
-    private List<Long> tagIds; // Add field for tag IDs
+    private List<Long> tagIds;
 
     public List<Long> getTagIds() {
         return tagIds;
