@@ -34,7 +34,9 @@ public class Answer {
     private Date updatedAt;
 
 
-    @Lob
+    @Column(name = "file")
+
+     @Lob
     private byte[] file;
 
 

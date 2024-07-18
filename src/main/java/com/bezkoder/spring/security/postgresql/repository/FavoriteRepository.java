@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface FavoriteRepository extends JpaRepository<Favorite, Long>{
     List<Favorite> findByUserAndMarkedAsFavorite(User user, boolean markedAsFavorite);
+    void deleteByQuestionId(Long questionId);
+
 }

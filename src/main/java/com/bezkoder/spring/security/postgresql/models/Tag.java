@@ -1,16 +1,23 @@
 package com.bezkoder.spring.security.postgresql.models;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+
+
+
 
 public class Tag {
     @Id
@@ -43,12 +50,13 @@ public class Tag {
     }
 
     @ManyToMany(mappedBy = "tags",fetch =FetchType.EAGER )
-    @JsonManagedReference
+    @JsonIgnore
+    //@JsonManagedReference
 
     private Set<Question> questions = new HashSet<>();
 
     private String name ;
-private String description ;
+    private String description ;
 
     public String getDescription() {
         return description;
@@ -56,6 +64,18 @@ private String description ;
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tag tag = (Tag) o;
+        return Objects.equals(id, tag.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
 }

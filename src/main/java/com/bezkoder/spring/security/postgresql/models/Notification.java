@@ -58,4 +58,15 @@ public class Notification {
     private boolean isRead;
 
     private LocalDateTime createdAt;
+
+    public Long getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Long questionId) {
+        this.questionId = questionId;
+    }
+
+    @Column (name = "question_id")
+    private Long questionId;
 }

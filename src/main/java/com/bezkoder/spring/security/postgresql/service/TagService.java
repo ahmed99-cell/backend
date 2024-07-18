@@ -37,6 +37,7 @@ public class TagService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tag", "id", id));
 
         tag.setName(tagDetails.getName());
+        tag.setDescription(tagDetails.getDescription());
 
         return tagRepository.save(tag);
     }

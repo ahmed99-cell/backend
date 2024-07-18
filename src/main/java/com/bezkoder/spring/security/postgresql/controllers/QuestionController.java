@@ -53,20 +53,18 @@ public class QuestionController {
         return questionService.getAllQuestions(searchRequest);
     }
     @GetMapping("/by-user-and-date")
-    public ResponseEntity<List<Question>> getQuestionsByUserIdAndDateRange(
+    public ResponseEntity<List<QuestionDto>> getQuestionsByUserIdAndDateRange(
             @RequestParam Long userId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date endDate) {
         try {
-            List<Question> questions = questionService.findQuestionsByUserIdAndDateRange(userId, startDate, endDate);
+            List<QuestionDto> questions = questionService.findQuestionsByUserIdAndDateRange(userId, startDate, endDate);
             return new ResponseEntity<>(questions, HttpStatus.OK);
         } catch (Exception e) {
-            // Log the exception and return an appropriate error response
             System.err.println("Error fetching questions: " + e.getMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
@@ -127,15 +125,36 @@ public class QuestionController {
     }
 
 
-    @PutMapping(value = "/{questionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateQuestion(
-            @PathVariable Long questionId,
-            @RequestPart("questionRequest") QuestionRequest questionRequest,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+    /*@PutMapping(value = "/{questionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Question> updateQuestion(@PathVariable Long questionId,
+                                                   @RequestPart("question") QuestionRequestWrapper questionRequestWrapper,
+                                                   @RequestPart(value = "file", required = false) MultipartFile file) {
+        Question updatedQuestion = questionService.updateQuestion(questionId, questionRequestWrapper, file);
+        return new ResponseEntity<>(updatedQuestion, HttpStatus.OK);
+    }*/
 
-        Question question = questionService.updateQuestion(questionId, questionRequest, file);
-        return ResponseEntity.ok(new MessageResponse("Question updated successfully!"));
+    @PutMapping(value = "/{questionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Question> updateQuestion(@PathVariable Long questionId,
+                                                   @Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper) {
+        Question updatedQuestion = questionService.updateQuestion(questionId, questionRequestWrapper, questionRequestWrapper.getFile());
+        return new ResponseEntity<>(updatedQuestion, HttpStatus.OK);
     }
+
+    /*@PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        Boolean isUserAnonymous = questionRequestWrapper.getUserAnonymous();
+        List<Long> tagIds = questionRequestWrapper.getTagIds(); // Change to receive a list of tag IDs
+        if (tagIds == null || tagIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("Tag IDs must not be null or empty");
+        }
+
+        questionService.createQuestion(questionRequestWrapper.getQuestionRequest(), username, questionRequestWrapper.getFile(), tagIds, isUserAnonymous);
+
+        return ResponseEntity.ok(new MessageResponse("Question created and associated with tag(s) successfully!"));
+    }*/
+
+
 
 
 
@@ -168,13 +187,13 @@ public class QuestionController {
     }
 
     @GetMapping("/byuseranddate")
-    public List<Answer> getAnswersByUserIdAndDateRange(
+    public ResponseEntity<List<AnswerDto>> getAnswersByUserIdAndDateRange(
             @RequestParam Long userId,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date endDate) {
-        return questionService.findAnswersByUserIdAndDateRange(userId, startDate, endDate);
+        List<AnswerDto> answers = questionService.findAnswersByUserIdAndDateRange(userId, startDate, endDate);
+        return new ResponseEntity<>(answers, HttpStatus.OK);
     }
-
 
 
     @GetMapping("/{questionId}/answers")

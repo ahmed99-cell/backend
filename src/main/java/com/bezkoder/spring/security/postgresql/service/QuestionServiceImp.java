@@ -2,6 +2,7 @@ package com.bezkoder.spring.security.postgresql.service;
 
 import com.bezkoder.spring.security.postgresql.Dto.*;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
+import com.bezkoder.spring.security.postgresql.controllers.QuestionRequestWrapper;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
@@ -26,6 +27,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class QuestionServiceImp implements QuestionService{
+    @Autowired
+    private FavoriteRepository favoriteRepository;
+
     @Autowired
     private QuestionRepository questionRepository;
 
@@ -76,15 +80,19 @@ public class QuestionServiceImp implements QuestionService{
 
     @Transactional
     @Override
-    public List<Question> findQuestionsByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
-        return questionRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+    public List<QuestionDto> findQuestionsByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
+        List<Question> questions = questionRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+        return questions.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
     @Transactional
-
     @Override
-
-    public List<Answer> findAnswersByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
-        return answerRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+    public List<AnswerDto> findAnswersByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
+        List<Answer> answers = answerRepository.findByUser_MatriculeAndCreatedAtBetween(userId, startDate, endDate);
+        return answers.stream()
+                .map(this::mapAnswerToDto)
+                .collect(Collectors.toList());
     }
     @Transactional
    @Override
@@ -94,6 +102,8 @@ public class QuestionServiceImp implements QuestionService{
 
 
     @Override
+    @Transactional
+
     public QuestionDto mapToDto(Question question) {
         QuestionDto dto = new QuestionDto();
         dto.setId(question.getId());
@@ -103,6 +113,7 @@ public class QuestionServiceImp implements QuestionService{
         if (isUserAnonymous == null || !isUserAnonymous) {
             dto.setUsername(question.getUser().getUsername());
         }
+        dto.setUserAnonymous(isUserAnonymous);
         dto.setCreatedAt(question.getCreatedAt());
         dto.setUpdatedAt(question.getUpdatedAt());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
@@ -126,6 +137,7 @@ public class QuestionServiceImp implements QuestionService{
         dto.setAnswerCount(answerCount);
         return dto;
     }
+    @Transactional
     @Override
     public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, List<Long> tagIds, Boolean isUserAnonymous) {
         if (questionRequest == null) {
@@ -135,7 +147,6 @@ public class QuestionServiceImp implements QuestionService{
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         List<Tag> tags = tagRepository.findAllById(tagIds);
         if (tags.size() != tagIds.size()) {
-            // Check if all tags were found
             throw new RuntimeException("Some tags were not found");
         }
 
@@ -227,6 +238,10 @@ public class QuestionServiceImp implements QuestionService{
         AnswerDto dto = new AnswerDto();
         dto.setId(answer.getId());
         dto.setContent(answer.getContent());
+
+        // Ajoutez cette ligne pour inclure l'ID de la question
+        dto.setQuestionId(answer.getQuestion().getId());
+
         dto.setUsername(answer.getUser().getUsername());
         dto.setCreatedAt(answer.getCreatedAt().toString());
         dto.setUpdatedAt(answer.getUpdatedAt() != null ? answer.getUpdatedAt().toString() : null);
@@ -259,36 +274,69 @@ public class QuestionServiceImp implements QuestionService{
     }
 
 
+   @Transactional
     @Override
-    public Question updateQuestion(Long questionId, QuestionRequest questionRequest, MultipartFile file) {
+    public Question updateQuestion(Long questionId, QuestionRequestWrapper questionRequestWrapper, MultipartFile file) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
+
+        QuestionRequest questionRequest = questionRequestWrapper.getQuestionRequest();
 
         question.setTitle(questionRequest.getTitle());
         question.setContent(questionRequest.getContent());
         question.setUpdatedAt(new Date());
 
-        if (file != null && !file.isEmpty()) {
+
+       // Handle the new properties from QuestionRequestWrapper
+        if (file != null) {
+            String contentType = file.getContentType();
+            if (!contentType.equals("image/jpeg") &&
+                    !contentType.equals("image/png") &&
+                    !contentType.equals("application/pdf")) {
+                throw new RuntimeException("Unsupported file type");
+            }
+
             try {
                 question.setFile(file.getBytes());
-                question.setContentType(file.getContentType()); // Update content type
+                question.setContentType(file.getContentType());
             } catch (IOException e) {
-                throw new RuntimeException("Failed to read file", e);
+                throw new RuntimeException("Error reading file", e);
             }
         }
 
-        return questionRepository.save(question);
+        // If you want to handle the tags
+        List<Long> tagIds = questionRequestWrapper.getTagIds();
+        if (tagIds != null) {
+            List<Tag> tags = tagRepository.findAllById(tagIds);
+            if (tags.size() != tagIds.size()) {
+                throw new RuntimeException("Some tags were not found");
+            }
+            question.getTags().clear();
+            question.getTags().addAll(tags);
+        }
+
+        // If you want to handle the anonymous user flag
+       Boolean isUserAnonymous = questionRequestWrapper.getUserAnonymous();
+
+           question.setUserAnonymous(isUserAnonymous);
+
+
+       return questionRepository.save(question);
     }
 
 
+// Dans QuestionServiceImp.java
+@Override
+@Transactional
+public void deleteQuestion(Long questionId) {
+    Question question = questionRepository.findById(questionId)
+            .orElseThrow(() -> new RuntimeException("Question not found"));
 
+    // Supprimez tous les favoris associés à la question
+    favoriteRepository.deleteByQuestionId(questionId);
 
-    @Override
-    public void deleteQuestion(Long questionId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
-        questionRepository.delete(question);
-    }
+    questionRepository.delete(question);
+}
 
 
 
@@ -314,6 +362,7 @@ public class QuestionServiceImp implements QuestionService{
         return answerRepository.save(answer);
     }
 
+
     @Override
     public void deleteAnswer(Long questionId, Long answerId) {
         Answer answer = answerRepository.findById(answerId)
@@ -338,9 +387,11 @@ public class QuestionServiceImp implements QuestionService{
     }
 
     @Override
-    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,byte[] imageData) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        Question question = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Question not found"));
+    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username, byte[] imageData) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
         Answer answer = new Answer();
         answer.setContent(answerRequest.getContent());
         answer.setUser(user);
@@ -349,19 +400,19 @@ public class QuestionServiceImp implements QuestionService{
         answer.setCreatedAt(new Date());
         Answer savedAnswer = answerRepository.save(answer);
 
+        // Création de la notification avec l'ID de la question
         Notification notification = new Notification();
         notification.setUser(question.getUser());
         notification.setContent("Une nouvelle réponse a été ajoutée à votre question");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
+        notification.setQuestionId(questionId);
 
         notificationRepository.save(notification);
         sendNotificationEmail(question.getUser(), "Une nouvelle réponse a été ajoutée à votre question");
 
-
         return savedAnswer;
     }
-
 
     @Override
     public AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username) {
@@ -382,15 +433,16 @@ public class QuestionServiceImp implements QuestionService{
         response.setCreatedAt(new Date());
         AnswerResponse savedResponse = answerResponseRepository.save(response);
 
+        // Création de la notification avec l'ID de la question de la réponse parente
         Notification notification = new Notification();
         notification.setUser(parentAnswer.getUser());
         notification.setContent("Une nouvelle réponse à une réponse a été ajoutée");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
+        notification.setQuestionId(questionId); // Utilisation de l'ID de la question associée à la notification
 
         notificationRepository.save(notification);
         sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre réponse de question");
-
 
         return savedResponse;
     }

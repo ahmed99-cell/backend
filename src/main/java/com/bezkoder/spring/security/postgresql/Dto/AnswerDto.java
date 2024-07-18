@@ -1,5 +1,7 @@
 package com.bezkoder.spring.security.postgresql.Dto;
 
+import com.bezkoder.spring.security.postgresql.models.Question;
+
 import java.util.List;
 
 public class AnswerDto {
@@ -20,6 +22,10 @@ public class AnswerDto {
     public List<String> getVotes() {
         return votes;
     }
+
+
+
+
 
     public void setVotes(List<String> votes) {
         this.votes = votes;
@@ -77,4 +83,13 @@ public class AnswerDto {
 
     private String createdAt;
     private String updatedAt;
+    private Long questionId;
+
+    public Long getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Long questionId) {
+        this.questionId = questionId;
+    }
 }
