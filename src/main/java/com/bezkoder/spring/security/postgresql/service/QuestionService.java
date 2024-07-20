@@ -30,7 +30,7 @@ public interface QuestionService {
     Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest);
     void deleteAnswer(Long questionId, Long answerId);
     List<Answer> getAnswersByQuestionId(Long questionId);
-    Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,byte[] imageData);
+    Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,MultipartFile file);
     AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username);
     List<AnswerResponse> getResponsesToAnswer(Long questionId, Long answerId);
     AnswerResponse updateResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, AnswerRequest answerRequest, String username);
@@ -45,6 +45,7 @@ public interface QuestionService {
 
     public AnswerDto mapAnswerToDto(Answer answer);
     public AnswerResponseDto mapToAnswerResponseDto(AnswerResponse answerResponse);
+    Answer acceptAnswer(Long answerId);
 
 
 

@@ -1,18 +1,24 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
-import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
+import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 public class AnswerRequestWrapper {
-    private QuestionRequest questionRequest;
+    private AnswerRequest answerRequest;
+
     private MultipartFile file;
 
-    public QuestionRequest getQuestionRequest() {
-        return questionRequest;
+
+
+
+
+
+    public AnswerRequest getAnswerRequest() {
+        return answerRequest;
     }
 
-    public void setQuestionRequest(QuestionRequest questionRequest) {
-        this.questionRequest = questionRequest;
+    public void setAnswerRequest(AnswerRequest answerRequest) {
+        this.answerRequest = answerRequest;
     }
 
     public MultipartFile getFile() {

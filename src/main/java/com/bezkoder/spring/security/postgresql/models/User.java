@@ -243,4 +243,15 @@ public class User {
   public Long getMatricule() {
     return matricule;
   }
+
+  public byte[] getImage() {
+    return image;
+  }
+
+  public void setImage(byte[] image) {
+    this.image = image;
+  }
+
+  @Lob
+  private  byte[] image;
 }

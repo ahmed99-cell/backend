@@ -77,7 +77,7 @@ public class WebSecurityConfig implements WebMvcConfigurer { // extends WebSecur
   @Bean
   public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
     StrictHttpFirewall firewall = new StrictHttpFirewall();
-    firewall.setAllowUrlEncodedPercent(true); // Allow % in URLs
+    firewall.setAllowUrlEncodedPercent(true);
     return firewall;
   }
 

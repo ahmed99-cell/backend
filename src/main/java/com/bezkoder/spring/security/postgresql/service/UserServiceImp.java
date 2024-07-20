@@ -3,18 +3,19 @@ package com.bezkoder.spring.security.postgresql.service;
 import com.bezkoder.spring.security.postgresql.Dto.UserDto;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
 import com.bezkoder.spring.security.postgresql.Exeception.UserNotFoundException;
-import com.bezkoder.spring.security.postgresql.models.Badge;
-import com.bezkoder.spring.security.postgresql.models.ERole;
-import com.bezkoder.spring.security.postgresql.models.Role;
-import com.bezkoder.spring.security.postgresql.models.User;
+import com.bezkoder.spring.security.postgresql.models.*;
+import com.bezkoder.spring.security.postgresql.payload.request.UserRequest;
 import com.bezkoder.spring.security.postgresql.repository.BadgeRepository;
+import com.bezkoder.spring.security.postgresql.repository.ReputationRepository;
 import com.bezkoder.spring.security.postgresql.repository.RoleRepository;
 import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,8 @@ public class UserServiceImp implements UserService{
     private RoleRepository roleRepository;
     @Autowired
     PasswordEncoder encoder;
+    @Autowired
+    private ReputationRepository reputationRepository;
 
 
     @Override
@@ -47,6 +50,7 @@ public class UserServiceImp implements UserService{
         userDto.setNom(user.getNom());
         userDto.setUsername(user.getUsername());
         userDto.setPrenom(user.getPrenom());
+
         userDto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName().name())
                 .collect(Collectors.toList()));
@@ -69,25 +73,83 @@ public class UserServiceImp implements UserService{
     }
 
     @Override
-    public User updateUser(User newUser, Long matricule) {
+    public User updateUser(User newUser, Long matricule, MultipartFile image) {
         return userRepository.findById(matricule).map(user -> {
             user.setUsername(newUser.getUsername());
             user.setNom(newUser.getNom());
             user.setPrenom(newUser.getPrenom());
             user.setEmail(newUser.getEmail());
 
-            // Encrypt the new password before saving it
             String encryptedPassword = encoder.encode(newUser.getPassword());
             user.setPassword(encryptedPassword);
 
-            // Clear existing roles and add new roles
+            if (image != null && !image.isEmpty()) {
+                try {
+                    user.setImage(image.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to store image", e);
+                }
+            }
 
 
             return userRepository.save(user);
         }).orElseThrow(() -> new UserNotFoundException(matricule));
     }
+
     @Override
-    public void addBadgeToUser(Long userId, Badge badge) {
+    public void updateReputationUserId(Long reputationId, Long userId) {
+        Reputation reputation = reputationRepository.findById(reputationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reputation", "id", reputationId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        reputation.setUser(user);
+
+        reputationRepository.save(reputation);
+    }
+
+    private Badge createBadge(String name) {
+        Badge badge = new Badge();
+        badge.setName(name);
+        return badgeRepository.save(badge);
+    }
+
+    @Override
+    public void checkAndUpdateBadge(User user) {
+        int score = user.getReputation().getScore();
+        Badge badge;
+        if (score >= 60) {
+            badge = badgeRepository.findByName("Gold")
+                    .orElseGet(() -> createBadge("Gold"));
+        } else if (score >= 40) {
+            badge = badgeRepository.findByName("Silver")
+                    .orElseGet(() -> createBadge("Silver"));
+        } else {
+            badge = badgeRepository.findByName("Bronze")
+                    .orElseGet(() -> createBadge("Bronze"));
+        }
+        user.getBadges().clear();
+        user.getBadges().add(badge);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void increaseReputation(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Error: User is not found."));
+        Reputation reputation = user.getReputation();
+        if (reputation == null) {
+            reputation = new Reputation();
+            reputation.setUser(user);
+            user.setReputation(reputation);
+        }
+        reputation.setScore(reputation.getScore() + 5);
+        userRepository.save(user);
+        checkAndUpdateBadge(user);
+    }
+
+    /*  public void addBadgeToUser(Long userId, Badge badge) {
         badge.setName("Nom du badge");
         badge.setDescription("Description du badge");
         badge.setIconUrl("URL de l'icône du badge");
@@ -101,7 +163,7 @@ public class UserServiceImp implements UserService{
 
             userRepository.save(user);
         }
-    }
+    }*/
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username).orElse(null);
     }
@@ -119,6 +181,7 @@ public class UserServiceImp implements UserService{
         user.setRoles(updatedRoles);
         userRepository.save(user);
     }
+
 
     }
 

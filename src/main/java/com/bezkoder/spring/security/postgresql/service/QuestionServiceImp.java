@@ -1,6 +1,7 @@
 package com.bezkoder.spring.security.postgresql.service;
 
 import com.bezkoder.spring.security.postgresql.Dto.*;
+import com.bezkoder.spring.security.postgresql.Exeception.AnswerNotFoundException;
 import com.bezkoder.spring.security.postgresql.Exeception.ResourceNotFoundException;
 import com.bezkoder.spring.security.postgresql.controllers.QuestionRequestWrapper;
 import com.bezkoder.spring.security.postgresql.models.*;
@@ -52,6 +53,8 @@ public class QuestionServiceImp implements QuestionService{
 
     @Autowired
     private VoteRepository voteRepository;
+    @Autowired
+    private UserServiceImp userServiceImp;
 
     @Override
     @Transactional
@@ -174,6 +177,7 @@ public class QuestionServiceImp implements QuestionService{
                 throw new RuntimeException("Error reading file", e);
             }
         }
+        userServiceImp.increaseReputation(user.getMatricule());
 
         questionRepository.save(question);
         return question;
@@ -264,6 +268,22 @@ public class QuestionServiceImp implements QuestionService{
         return dto;
     }
 
+@Transactional
+    public Answer acceptAnswer(Long answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+
+        // Set all answers of the same question to not accepted
+        List<Answer> answers = answerRepository.findByQuestionId(answer.getQuestion().getId());
+        for (Answer a : answers) {
+            a.setAccepted(false);
+            answerRepository.save(a);
+        }
+
+        // Mark the selected answer as accepted
+        answer.setAccepted(true);
+        return answerRepository.save(answer);
+    }
 
 
     private FavoriteDto mapFavoriteToDto(Favorite favorite) {
@@ -387,29 +407,47 @@ public void deleteQuestion(Long questionId) {
     }
 
     @Override
-    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username, byte[] imageData) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+    public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,MultipartFile file) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Question question = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Question not found"));
+        Hibernate.initialize(question.getUser());
+        String questionCreatorEmail = question.getUser().getEmail();
         Answer answer = new Answer();
         answer.setContent(answerRequest.getContent());
         answer.setUser(user);
         answer.setQuestion(question);
-        answer.setFile(imageData);
-        answer.setCreatedAt(new Date());
-        Answer savedAnswer = answerRepository.save(answer);
 
-        // Création de la notification avec l'ID de la question
+
+        answer.setCreatedAt(new Date());
+        if (file != null) {
+
+            String contentType = file.getContentType();
+
+            if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
+                throw new RuntimeException("Unsupported file type");
+            }
+
+            try {
+                answer.setFile(file.getBytes());
+                answer.setContentType(file.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading file", e);
+            }
+        }
+
+        Answer savedAnswer = answerRepository.save(answer);
+       userServiceImp.increaseReputation(user.getMatricule());
+
+
         Notification notification = new Notification();
         notification.setUser(question.getUser());
         notification.setContent("Une nouvelle réponse a été ajoutée à votre question");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setQuestionId(questionId);
 
         notificationRepository.save(notification);
-        sendNotificationEmail(question.getUser(), "Une nouvelle réponse a été ajoutée à votre question");
+        sendNotificationEmail(questionCreatorEmail, "Une nouvelle réponse a été ajoutée à votre question");
+
 
         return savedAnswer;
     }
@@ -432,6 +470,8 @@ public void deleteQuestion(Long questionId) {
         response.setParentAnswer(parentAnswer);
         response.setCreatedAt(new Date());
         AnswerResponse savedResponse = answerResponseRepository.save(response);
+        userServiceImp.increaseReputation(user.getMatricule());
+
 
         // Création de la notification avec l'ID de la question de la réponse parente
         Notification notification = new Notification();
@@ -442,13 +482,14 @@ public void deleteQuestion(Long questionId) {
         notification.setQuestionId(questionId); // Utilisation de l'ID de la question associée à la notification
 
         notificationRepository.save(notification);
-        sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre réponse de question");
+      // sendNotificationEmail(parentAnswer.getUser(), "Une nouvelle réponse a été ajoutée à votre réponse de question");
 
         return savedResponse;
     }
-    private void sendNotificationEmail(User user, String content) {
+    @Transactional
+    public void sendNotificationEmail(String userEmail, String content) {
         SimpleMailMessage email = new SimpleMailMessage();
-        email.setTo(user.getEmail());
+        email.setTo(userEmail);
         email.setSubject("Notification");
         email.setText(content);
         mailSender.send(email);

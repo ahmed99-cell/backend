@@ -139,6 +139,11 @@ public class QuestionController {
         Question updatedQuestion = questionService.updateQuestion(questionId, questionRequestWrapper, questionRequestWrapper.getFile());
         return new ResponseEntity<>(updatedQuestion, HttpStatus.OK);
     }
+    @PutMapping("/{answerId}/accept")
+    public ResponseEntity<Answer> acceptAnswer(@PathVariable Long answerId) {
+        Answer acceptedAnswer = questionService.acceptAnswer(answerId);
+        return ResponseEntity.ok(acceptedAnswer);
+    }
 
     /*@PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createQuestion(@Valid @ModelAttribute QuestionRequestWrapper questionRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
@@ -213,33 +218,11 @@ public class QuestionController {
     }
 
 
-    @PostMapping("/{questionId}/answers")
-    public ResponseEntity<?> createAnswer(@PathVariable Long questionId, @Valid @RequestBody AnswerRequest answerRequest, @AuthenticationPrincipal UserDetails userDetails, @RequestParam(value = "file", required = false) MultipartFile image) {
-        try {
-            // Récupérer le nom d'utilisateur de l'utilisateur authentifié
-            String username = userDetails.getUsername();
-
-            // Vérifier si une image est présente dans la requête
-            if (image != null && !image.isEmpty()) {
-                // Convertir l'image en tableau d'octets
-                byte[] imageData = image.getBytes();
-
-                // Appeler le service pour créer la réponse avec les données de l'image
-                Answer answer = questionService.createAnswer(questionId, answerRequest, username, imageData);
-
-                // Répondre avec un message de succès
-                return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
-            } else {
-                // Si aucune image n'est présente, appeler le service pour créer la réponse sans données d'image
-                Answer answer = questionService.createAnswer(questionId, answerRequest, username, null);
-
-                // Répondre avec un message de succès
-                return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
-            }
-        } catch (IOException e) {
-            // En cas d'erreur lors du traitement de l'image, répondre avec un message d'erreur
-            return ResponseEntity.badRequest().body(new MessageResponse("Failed to upload image: " + e.getMessage()));
-        }
+    @PostMapping(value = "/{questionId}/answers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createAnswer(@PathVariable Long questionId, @Valid @ModelAttribute AnswerRequestWrapper answerRequestWrapper, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        Answer answer = questionService.createAnswer(questionId, answerRequestWrapper.getAnswerRequest(), username, answerRequestWrapper.getFile());
+        return ResponseEntity.ok(new MessageResponse("Answer created successfully!"));
     }
 
 

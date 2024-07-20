@@ -38,6 +38,10 @@ public class Answer {
 
      @Lob
     private byte[] file;
+    private String contentType;
+    private boolean isAccepted = false;
+
+
 
 
 
