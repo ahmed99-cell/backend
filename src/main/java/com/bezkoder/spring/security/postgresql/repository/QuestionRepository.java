@@ -11,6 +11,11 @@ import java.util.Date;
 import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question,Long> {
+
+
+
+
+
     @Query("SELECT q FROM Question q WHERE q.user.matricule = :userId AND q.createdAt BETWEEN :startDate AND :endDate")
     List<Question> findByUser_MatriculeAndCreatedAtBetween(
             @Param("userId") Long userId,

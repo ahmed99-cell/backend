@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,7 +80,40 @@ public class QuestionServiceImp implements QuestionService{
         return questionRepository.searchQuestions(keyword);
     }
 
+    public List<QuestionDto> getAllQuestions1() {
+        return questionRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
 
+    private QuestionDto convertToDto(Question question) {
+        QuestionDto dto = new QuestionDto();
+        dto.setId(question.getId());
+        dto.setTitle(question.getTitle());
+        dto.setContent(question.getContent());
+        dto.setCreatedAt(question.getCreatedAt());
+        dto.setUpdatedAt(question.getUpdatedAt());
+        dto.setViews(question.getViews());
+        dto.setUserAnonymous(question.getUserAnonymous());
+
+        // Set username (if user is not null)
+        dto.setUsername(question.getUser() != null ? question.getUser().getUsername() : "Anonymous");
+
+        // Convert and set answers
+        dto.setAnswers(question.getAnswers().stream().map(this::mapAnswerToDto).collect(Collectors.toList()));
+
+
+        // Set tags
+        dto.setTags(question.getTags().stream()
+                .map(Tag::getName) // Assuming Tag has a getName() method
+                .collect(Collectors.toSet()));
+
+        // Calculate and set vote count and answer count
+        dto.setVoteCount(question.getVotes().size());
+        dto.setAnswerCount(question.getAnswers().size());
+
+        return dto;
+    }
 
 
     @Transactional
@@ -221,13 +256,14 @@ public class QuestionServiceImp implements QuestionService{
     private QuestionByIdDto maptoDto(Question question) {
         QuestionByIdDto dto = new QuestionByIdDto();
         dto.setId(question.getId());
+        dto.setUserId(question.getUser().getMatricule());
         dto.setTitle(question.getTitle());
         dto.setContent(question.getContent());
         dto.setUsername(question.getUser().getUsername());
         dto.setCreatedAt(question.getCreatedAt());
         dto.setUpdatedAt(question.getUpdatedAt());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
-        dto.setFile(question.getFile()); // Ajoutez cette ligne
+        dto.setFile(question.getFile());
         dto.setContentType(question.getContentType());
         dto.setTags(question.getTags().stream().map(Tag::getName).collect(Collectors.toSet()));
         dto.setAnswers(question.getAnswers().stream().map(this::mapAnswerToDto).collect(Collectors.toList()));
@@ -242,14 +278,19 @@ public class QuestionServiceImp implements QuestionService{
         AnswerDto dto = new AnswerDto();
         dto.setId(answer.getId());
         dto.setContent(answer.getContent());
+        dto.setUserId(answer.getUser().getMatricule());
 
-        // Ajoutez cette ligne pour inclure l'ID de la question
+
         dto.setQuestionId(answer.getQuestion().getId());
+        dto.setAccepted(answer.isAccepted());
+        dto.setFile(answer.getFile());
+        dto.setContentType(answer.getContentType());
 
         dto.setUsername(answer.getUser().getUsername());
         dto.setCreatedAt(answer.getCreatedAt().toString());
         dto.setUpdatedAt(answer.getUpdatedAt() != null ? answer.getUpdatedAt().toString() : null);
-        dto.setResponses(answer.getResponses().stream().map(AnswerResponse::getContent).collect(Collectors.toList()));
+        dto.setResponses(answer.getResponses().stream().map(this::mapToAnswerResponseDto).collect(Collectors.toList()));
+
 
         dto.setVotes(answer.getVotes().stream().map(Vote::toString).collect(Collectors.toList()));
         dto.setFavorites(answer.getFavorites().stream().map(Favorite::toString).collect(Collectors.toList()));
@@ -260,6 +301,7 @@ public class QuestionServiceImp implements QuestionService{
         AnswerResponseDto dto = new AnswerResponseDto();
         dto.setId(answerResponse.getId());
         dto.setContent(answerResponse.getContent());
+        dto.setUserId(answerResponse.getUser().getMatricule());
         dto.setUsername(answerResponse.getUser().getUsername());
         dto.setCreatedAt(answerResponse.getCreatedAt().toString());
         dto.setUpdatedAt(answerResponse.getUpdatedAt() != null ? answerResponse.getUpdatedAt().toString() : null);
@@ -268,7 +310,7 @@ public class QuestionServiceImp implements QuestionService{
         return dto;
     }
 
-@Transactional
+    @Transactional
     public Answer acceptAnswer(Long answerId) {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException(answerId));
@@ -394,6 +436,7 @@ public void deleteQuestion(Long questionId) {
     }
 
     @Override
+    @Transactional
     public List<Answer> getAnswersByQuestionId(Long questionId) {
         return answerRepository.findByQuestionId(questionId);
     }
@@ -407,6 +450,7 @@ public void deleteQuestion(Long questionId) {
     }
 
     @Override
+    @Transactional
     public Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,MultipartFile file) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         Question question = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Question not found"));
@@ -423,7 +467,21 @@ public void deleteQuestion(Long questionId) {
 
             String contentType = file.getContentType();
 
-            if (!contentType.equals("image/jpeg") && !contentType.equals("application/pdf") && !contentType.equals("text/csv")) {
+            if (
+                    !contentType.equals("image/jpeg") &&
+                            !contentType.equals("image/png") &&
+                            !contentType.equals("image/gif") &&
+                            !contentType.equals("image/bmp") &&
+                            !contentType.equals("image/svg+xml") &&
+                            !contentType.equals("application/pdf") &&
+                            !contentType.equals("application/msword") &&
+                            !contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") &&
+                            !contentType.equals("application/vnd.ms-excel") &&
+                            !contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") &&
+                            !contentType.equals("text/csv") &&
+                            !contentType.equals("application/rtf") &&
+                            !contentType.equals("text/plain")
+            ) {
                 throw new RuntimeException("Unsupported file type");
             }
 
@@ -444,7 +502,7 @@ public void deleteQuestion(Long questionId) {
         notification.setContent("Une nouvelle réponse a été ajoutée à votre question");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
-
+        notification.setQuestionId(questionId);
         notificationRepository.save(notification);
         sendNotificationEmail(questionCreatorEmail, "Une nouvelle réponse a été ajoutée à votre question");
 
@@ -453,6 +511,7 @@ public void deleteQuestion(Long questionId) {
     }
 
     @Override
+    @Transactional
     public AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));

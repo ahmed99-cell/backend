@@ -7,6 +7,7 @@ import com.bezkoder.spring.security.postgresql.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -24,6 +25,7 @@ public class NotificationServiceImp implements NotificationService{
     }
 
     @Override
+    @Transactional
     public List<Notification> getCurrentUserNotifications(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));

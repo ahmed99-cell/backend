@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class UserServiceImp implements UserService{
 
 
     @Override
+    @Transactional
     public List<UserDto> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
@@ -50,6 +52,14 @@ public class UserServiceImp implements UserService{
         userDto.setNom(user.getNom());
         userDto.setUsername(user.getUsername());
         userDto.setPrenom(user.getPrenom());
+        userDto.setImage(user.getImage());
+
+        userDto.setReputation(user.getReputation());
+
+        if (user.getImage() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(user.getImage());
+            userDto.setImageBase64(base64Image);
+        }
 
         userDto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName().name())
@@ -57,10 +67,20 @@ public class UserServiceImp implements UserService{
         return userDto;
     }
 
+
     @Override
     public User getUserById(Long matricule) {
-        return userRepository.findById(matricule)
+        User user = userRepository.findById(matricule)
                 .orElseThrow(() -> new UserNotFoundException(matricule));
+
+
+        if (user.getImage() != null) {
+
+            String base64Image = Base64.getEncoder().encodeToString(user.getImage());
+            user.setImageBase64(base64Image);
+        }
+
+        return user;
     }
 
     @Override

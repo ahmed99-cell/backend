@@ -32,11 +32,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 
 
-        @Bean
-        public MessageChannel customBrokerChannel() {
-            return new ExecutorSubscribableChannel();
-        }
+    @Bean
+    public MessageChannel customBrokerChannel() {
+        return new ExecutorSubscribableChannel();
     }
+}
 
 
 

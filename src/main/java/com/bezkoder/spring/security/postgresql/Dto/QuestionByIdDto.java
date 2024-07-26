@@ -20,6 +20,7 @@ public class QuestionByIdDto {
     private Date updatedAt;
     private Set<String> tags;
     private String Title;
+    private Long userId;
 
 
 }

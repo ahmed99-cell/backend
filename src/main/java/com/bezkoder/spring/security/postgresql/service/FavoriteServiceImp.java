@@ -55,6 +55,7 @@ public class FavoriteServiceImp implements FavoriteService{
 
 
     @Override
+    @Transactional
     public Favorite markQuestionAsFavorite(Long questionId) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 

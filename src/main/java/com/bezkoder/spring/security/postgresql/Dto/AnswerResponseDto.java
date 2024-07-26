@@ -15,6 +15,16 @@ public class AnswerResponseDto {
     private String createdAt;
     private String updatedAt;
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    private Long userId;
+
     private List<String> votes;
     private List<String> favorites;
 

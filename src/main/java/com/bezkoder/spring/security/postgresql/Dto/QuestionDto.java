@@ -21,6 +21,9 @@ public class QuestionDto {
 
     private List<Map<String, Object>> favorites;
 
+
+
+    private List<AnswerDto> answers;
     private Set<String> tags;
     private int voteCount;
     private int answerCount;

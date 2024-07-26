@@ -8,16 +8,49 @@ public class AnswerDto {
     private Long id;
     private String content;
     private String username;
-    private List<String> responses;
-    private List<String> votes;
 
-    public List<String> getResponses() {
+    public List<AnswerResponseDto> getResponses() {
         return responses;
     }
 
-    public void setResponses(List<String> responses) {
+    public void setResponses(List<AnswerResponseDto> responses) {
         this.responses = responses;
     }
+
+    private List<AnswerResponseDto> responses;
+    private List<String> votes;
+    private byte[] file;
+
+
+    public boolean isAccepted() {
+        return isAccepted;
+    }
+
+    public void setAccepted(boolean accepted) {
+        isAccepted = accepted;
+    }
+
+    private boolean isAccepted;
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    private String contentType;
+
+    public byte[] getFile() {
+        return file;
+    }
+
+    public void setFile(byte[] file) {
+        this.file = file;
+    }
+
+
 
     public List<String> getVotes() {
         return votes;
@@ -84,6 +117,16 @@ public class AnswerDto {
     private String createdAt;
     private String updatedAt;
     private Long questionId;
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    private Long userId;
 
     public Long getQuestionId() {
         return questionId;

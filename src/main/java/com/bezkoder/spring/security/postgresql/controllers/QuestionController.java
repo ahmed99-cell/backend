@@ -42,6 +42,11 @@ public class QuestionController {
     private TagService tagService;
 
 
+    @GetMapping
+    public List<QuestionDto> getAllQuestions1() {
+        return questionService.getAllQuestions1();
+    }
+
     @GetMapping("/search")
     public List<Question> searchQuestions(@RequestParam String keyword) {
         return questionService.searchQuestions(keyword);
