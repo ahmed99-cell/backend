@@ -413,14 +413,33 @@ public void deleteQuestion(Long questionId) {
     }
 
     @Override
-    public Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest) {
+    public Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest, MultipartFile file) {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new RuntimeException("Answer not found"));
+
         if (!answer.getQuestion().getId().equals(questionId)) {
             throw new RuntimeException("Answer does not belong to the specified question");
         }
+
         answer.setContent(answerRequest.getContent());
         answer.setUpdatedAt(new Date());
+
+        if (file != null && !file.isEmpty()) {
+            String contentType = file.getContentType();
+            if (!contentType.equals("image/jpeg") &&
+                    !contentType.equals("image/png") &&
+                    !contentType.equals("application/pdf")) {
+                throw new RuntimeException("Unsupported file type");
+            }
+
+            try {
+                answer.setFile(file.getBytes());
+                answer.setContentType(file.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading file", e);
+            }
+        }
+
         return answerRepository.save(answer);
     }
 

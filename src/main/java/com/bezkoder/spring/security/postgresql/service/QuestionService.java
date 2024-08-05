@@ -27,7 +27,7 @@ public interface QuestionService {
 
     Question updateQuestion(Long questionId, QuestionRequestWrapper questionRequestWrapper, MultipartFile file);    void deleteQuestion(Long questionId);
     Answer getAnswerById(Long questionId, Long answerId);
-    Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest);
+    Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest, MultipartFile file);
     void deleteAnswer(Long questionId, Long answerId);
     List<Answer> getAnswersByQuestionId(Long questionId);
     Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,MultipartFile file);
