@@ -109,23 +109,15 @@ jobs:
 
   build-image:
     runs-on: ubuntu-latest
-    name: Build Docker image
-    needs: [build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: 17
-          distribution: 'corretto'
-      - name: Extract project version
-        id: extract_version
-        run: |
-          echo "VERSION=$(./mvnw -q -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_ENV
-      - name: Login to DockerHub
+      - name: Build Docker image
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            dockerfile: Dockerfile
+            push: false
+            tags: ${{secrets.DOCKER_HUB_USERNAME}}/spring-boot-application:latest
+
+        - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
