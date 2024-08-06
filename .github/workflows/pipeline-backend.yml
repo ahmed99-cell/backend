@@ -110,7 +110,7 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     name: Build Docker image
-    needs: [build]
+    needs: [ build ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -124,12 +124,13 @@ jobs:
       - name: Extract project version
         id: extract_version
         run: |
-          echo "VERSION=$(./mvnw -q -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_ENV
+          VERSION=$(./mvnw -q -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec)
+          echo "VERSION=${VERSION:-latest}" >> $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN}}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & Push to DockerHub
         uses: docker/build-push-action@v5
         with:
@@ -137,10 +138,12 @@ jobs:
           file: docker/Backend/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:${{ steps.extract_version.outputs.VERSION }},${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:${{ env.VERSION }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:latest
           build-args: |
             PROFILE=dev
-            APP_VERSION=${{ steps.extract_version.outputs.VERSION }}
+            APP_VERSION=${{ env.VERSION }}
 
   deploy:
     name: Deploy Backend Locally
