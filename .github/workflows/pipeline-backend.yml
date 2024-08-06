@@ -45,7 +45,7 @@ jobs:
       - name: Grant execute permission for Maven Wrapper
         run: chmod +x mvnw
       - name: Running unit tests
-        run: ./ mvn -B test --file pom.xml
+        run: ./mvnw clean test
 
       - name: Archive test reports
         if: failure()
