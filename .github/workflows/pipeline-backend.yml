@@ -87,6 +87,8 @@ jobs:
         with:
           java-version: 17
           distribution: 'corretto'
+      - name: Grant execute permission for Maven Wrapper
+        run: chmod +x mvnw
       - name: Build project
         run: |
           ./mvnw clean package
