@@ -16,14 +16,14 @@ jobs:
     name: Compile project
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Setup JDK
+      - name: Setup JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: 17
-          distribution: 'corretto'
+            distribution: 'corretto'
+            java-version: 17
       - name: Compile project
         run: |
           ./mvnw clean compile
