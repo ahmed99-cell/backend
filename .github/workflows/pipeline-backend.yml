@@ -141,16 +141,17 @@ jobs:
       - name: Build & Push to DockerHub
         uses: docker/build-push-action@v5
         with:
-            context: docker/Backend
-            file: Dockerfile
-            push: true
-            platforms: linux/amd64
-            tags: |
-              ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:${{ env.VERSION }}
-              ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:latest
-            build-args: |
-              PROFILE=dev
-              APP_VERSION=${{ env.VERSION }}
+          context: docker/Backend
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:${{ env.VERSION }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/bsn-api:latest
+          build-args: |
+            PROFILE=dev
+            APP_VERSION=${{ env.VERSION }}
+  
   
 
   deploy:
