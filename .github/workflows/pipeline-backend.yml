@@ -30,25 +30,32 @@ jobs:
         run: ./mvnw clean compile
 
 
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: 17
-          distribution: 'corretto'
-      - name: Grant execute permission for Maven Wrapper
-        run: chmod +x mvnw
-      - name: Running unit tests
-        run: |
-          ./mvnw clean test
+  jobs:
+    unit-tests:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Setup JDK
+          uses: actions/setup-java@v3
+          with:
+            java-version: 17
+            distribution: 'corretto'
+        - name: Grant execute permission for Maven Wrapper
+          run: chmod +x mvnw
+        - name: Running unit tests
+          run: ./mvnw clean test
+        - name: Archive test reports
+          if: failure()
+          uses: actions/upload-artifact@v3
+          with:
+            name: test-reports
+            path: target/surefire-reports/
 
-  build:
+
+    build:
     runs-on: ubuntu-latest
     name: Build backend
     needs: [compile, unit-tests]
