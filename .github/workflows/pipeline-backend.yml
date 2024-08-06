@@ -45,7 +45,8 @@ jobs:
       - name: Grant execute permission for Maven Wrapper
         run: chmod +x mvnw
       - name: Running unit tests
-        run: ./mvnw clean test -e -X
+        run: ./ mvn -B test --file pom.xml
+
       - name: Archive test reports
         if: failure()
         uses: actions/upload-artifact@v3
