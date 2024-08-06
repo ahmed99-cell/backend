@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.bezkoder</groupId>
 	<artifactId>spring-boot-security-postgresql</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>spring-boot-security-postgresql</name>
 	<description>Spring Boot, Spring Security, PostgreSQL: JWT Authentication &amp; Authorization example</description>
 
