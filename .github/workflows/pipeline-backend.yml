@@ -181,8 +181,8 @@ jobs:
         run: |
           docker compose -f docker-compose.yml build
 
-      - name: Set ENV variables and deploy locally
+      - name: Deploy locally
         run: |
-          docker compose -f docker-compose.yml pull -q
           docker compose -f docker-compose.yml up -d
+ 
   
