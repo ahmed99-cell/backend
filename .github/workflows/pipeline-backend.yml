@@ -141,7 +141,7 @@ jobs:
       - name: Build & Push to DockerHub
         uses: docker/build-push-action@v5
         with:
-          context: BACKENDQR
+          context: docker/Backend
           file: docker/Backend/Dockerfile
           push: true
           platforms: linux/amd64
@@ -151,6 +151,7 @@ jobs:
           build-args: |
             PROFILE=dev
             APP_VERSION=${{ env.VERSION }}
+  
   
   
 
