@@ -23,26 +23,24 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // Parse the incoming message payload to extract sender ID, receiver ID, and content
         ObjectMapper objectMapper = new ObjectMapper();
         MessagePayload payload = objectMapper.readValue(message.getPayload(), MessagePayload.class);
 
-        // Retrieve sender and receiver from the repository
         User sender = userRepository.findById(payload.getSenderId()).orElse(null);
         User receiver = userRepository.findById(payload.getReceiverId()).orElse(null);
 
         if (sender == null || receiver == null) {
             System.err.println("Sender or Receiver not found");
-            return; // Exit if either sender or receiver is not found
+            return;
         }
 
-        // Create a new Message entity
+
         Message msg = new Message();
         msg.setContent(payload.getContent());
         msg.setSender(sender);
         msg.setReceiver(receiver);
 
-        // Save the message to the repository
+
         messageRepository.save(msg);
     }
 

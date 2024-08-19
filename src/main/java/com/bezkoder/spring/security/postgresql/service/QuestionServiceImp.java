@@ -13,6 +13,9 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
@@ -57,6 +61,7 @@ public class QuestionServiceImp implements QuestionService{
     private VoteRepository voteRepository;
     @Autowired
     private UserServiceImp userServiceImp;
+
 
     @Override
     @Transactional
@@ -175,48 +180,127 @@ public class QuestionServiceImp implements QuestionService{
         dto.setAnswerCount(answerCount);
         return dto;
     }
-    @Transactional
-    @Override
-    public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, List<Long> tagIds, Boolean isUserAnonymous) {
-        if (questionRequest == null) {
-            throw new IllegalArgumentException("QuestionRequest cannot be null");
-        }
-
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        List<Tag> tags = tagRepository.findAllById(tagIds);
-        if (tags.size() != tagIds.size()) {
-            throw new RuntimeException("Some tags were not found");
-        }
-
-        Question question = new Question();
-        question.setTitle(questionRequest.getTitle());
-        question.setContent(questionRequest.getContent());
-        question.setUser(user);
-        question.setCreatedAt(new Date());
-        question.getTags().addAll(tags);
-        question.setUserAnonymous(isUserAnonymous);
-
-        if (file != null) {
-            String contentType = file.getContentType();
-
-            if (!contentType.equals("image/jpeg") &&
-                    !contentType.equals("image/png") &&
-                    !contentType.equals("application/pdf")) {
-                throw new RuntimeException("Unsupported file type");
+        @Transactional
+        @Override
+        public Question createQuestion(QuestionRequest questionRequest, String username, MultipartFile file, List<Long> tagIds, Boolean isUserAnonymous) {
+            if (questionRequest == null) {
+                throw new IllegalArgumentException("QuestionRequest cannot be null");
+            }
+            boolean estDuplique = verifierQuestionDuplique(questionRequest.getTitle());
+            if (estDuplique) {
+                throw new RuntimeException("La question existe déjà");
             }
 
-            try {
-                question.setFile(file.getBytes());
-                question.setContentType(file.getContentType());
-            } catch (IOException e) {
-                throw new RuntimeException("Error reading file", e);
+            // Vérification des bad words dans le titre et le contenu
+            boolean contientBadWords = verifierQuestionAvecBadWords(questionRequest.getTitle(), questionRequest.getContent());
+            if (contientBadWords) {
+                throw new RuntimeException("La question contient des mots interdits.");
             }
-        }
-        userServiceImp.increaseReputation(user.getMatricule());
 
-        questionRepository.save(question);
-        return question;
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+            List<Tag> tags = tagRepository.findAllById(tagIds);
+            if (tags.size() != tagIds.size()) {
+                throw new RuntimeException("Some tags were not found");
+            }
+
+            Question question = new Question();
+            question.setTitle(questionRequest.getTitle());
+            question.setContent(questionRequest.getContent());
+            question.setUser(user);
+            question.setCreatedAt(new Date());
+            question.getTags().addAll(tags);
+            question.setUserAnonymous(isUserAnonymous);
+
+            if (file != null) {
+                String contentType = file.getContentType();
+
+                if (!contentType.equals("image/jpeg") &&
+                        !contentType.equals("image/png") &&
+                        !contentType.equals("application/pdf")) {
+                    throw new RuntimeException("Unsupported file type");
+                }
+
+                try {
+                    question.setFile(file.getBytes());
+                    question.setContentType(file.getContentType());
+                } catch (IOException e) {
+                    throw new RuntimeException("Error reading file", e);
+                }
+            }
+            // Check for duplicate question
+
+
+            userServiceImp.increaseReputation(user.getMatricule());
+
+            questionRepository.save(question);
+            return question;
+        }
+    private boolean verifierQuestionAvecBadWords(String title, String content) {
+        String url = "http://localhost:8000/detect"; // Assurez-vous que le port et le chemin sont corrects
+
+        Map<String, String> requestPayload = new HashMap<>();
+        requestPayload.put("title", title);
+        requestPayload.put("content", content);
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestPayload, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null) {
+                Boolean titleContainsBadWords = (Boolean) responseBody.get("title_contains_bad_words");
+                Boolean contentContainsBadWords = (Boolean) responseBody.get("content_contains_bad_words");
+
+                // Log the results for debugging
+                System.out.println("Title contains bad words: " + titleContainsBadWords);
+                System.out.println("Content contains bad words: " + contentContainsBadWords);
+
+                return titleContainsBadWords || contentContainsBadWords;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la vérification des mauvais mots : " + e.getMessage());
+        }
+
+        return false;
     }
+
+
+
+    private boolean verifierQuestionDuplique(String title) {
+        String url = "http://localhost:8003/predict";
+
+        Map<String, String> requestPayload = new HashMap<>();
+        requestPayload.put("question", title );
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestPayload, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null) {
+                Boolean estDuplique = (Boolean) responseBody.get("est_duplique");
+                return estDuplique != null && estDuplique;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la vérification de la duplication : " + e.getMessage());
+        }
+
+        return false;
+    }
+
+
 
 
     @Override

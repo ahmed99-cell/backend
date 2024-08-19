@@ -1,4 +1,4 @@
-package com.bezkoder.spring.security.postgresql.security;
+/*package com.bezkoder.spring.security.postgresql.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,4 +20,4 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build();
     }
-}
+}*/

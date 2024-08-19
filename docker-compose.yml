@@ -14,12 +14,7 @@ services:
     #networks:
      # - spring-demo
     restart: unless-stopped
-  mail-dev:
-    container_name: mail-dev-bsn
-    image: maildev/maildev
-    ports:
-      - 1080:1080
-      - 1025:1025
+
   bsn-api:
     container_name: bsn-api
     image: back-image:latest
@@ -30,6 +25,33 @@ services:
     depends_on:
       - postgres
 
+  prometheus:
+    image: prom/prometheus:v2.46.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./docker/prometheus/tmp:/prometheus
+      - ./docker/prometheus/config:/etc/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --log.level=debug
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    ports:
+      - 4000:4000
+    volumes:
+      - ./docker/grafana/tmp:/var/lib/grafana
+      - ./docker/grafana/grafana.ini:/etc/grafana/grafana.ini
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./docker/alert-manager/tmp:/data
+      - ./docker/alert-manager/config:/config
+    command: --config.file=/config/alertmanager.yml --log.level=debug
+
+
   front:
       container_name: front-container
       image: front-image
@@ -39,6 +61,19 @@ services:
       #  - spring-demo
       depends_on:
         - bsn-api
+  svm-model:
+      container_name: svm-model-container
+      image: my-svm-model
+      environment:
+        - POSTGRES_HOST=postgres-sql-bsn
+        - POSTGRES_PORT=5432
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=admin
+        - POSTGRES_DB=sopra-helper
+      ports:
+        - 8003:8003
+      depends_on:
+        - postgres
 
 #networks:
  # spring-demo:

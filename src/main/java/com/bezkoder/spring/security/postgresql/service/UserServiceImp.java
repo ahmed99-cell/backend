@@ -189,21 +189,29 @@ public class UserServiceImp implements UserService{
     }
     @Override
     public void updateUserRole(Long userId, String newRoleName) {
+        System.out.println("Updating role for user ID: " + userId + " with new role: " + newRoleName);
+
+        // Vérifiez si l'utilisateur existe
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Error: User is not found."));
 
-        Set<Role> updatedRoles = new HashSet<>();
+        // Vérifiez si le rôle existe
         Role newRole = roleRepository.findByName(ERole.valueOf(newRoleName))
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
-        updatedRoles.add(newRole);
+        // Ajoutez ou mettez à jour le rôle de l'utilisateur
+        Set<Role> updatedRoles = new HashSet<>(user.getRoles());
+        updatedRoles.add(newRole); // Ajoutez le nouveau rôle
 
         user.setRoles(updatedRoles);
         userRepository.save(user);
+
+        System.out.println("User roles updated successfully for user ID: " + userId);
     }
 
 
-    }
+
+}
 
 
 

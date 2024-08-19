@@ -24,7 +24,7 @@ import com.bezkoder.spring.security.postgresql.security.services.UserDetailsServ
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+//import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +37,7 @@ import java.util.Arrays;
 // (securedEnabled = true,
 // jsr250Enabled = true,
 // prePostEnabled = true) // by default
-@EnableSwagger2
+//@EnableSwagger2
 
 
 public class WebSecurityConfig implements WebMvcConfigurer { // extends WebSecurityConfigurerAdapter {
@@ -118,7 +118,7 @@ public class WebSecurityConfig implements WebMvcConfigurer { // extends WebSecur
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(authorize -> authorize
                     .antMatchers("/api/**", "/api/test/**", "/ws/**").permitAll()
-                    .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                    .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**","/actuator/**","/actuator/prometheus").permitAll()
                     .anyRequest().authenticated()
             );
 
