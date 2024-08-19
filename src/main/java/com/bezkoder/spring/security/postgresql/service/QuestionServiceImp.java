@@ -235,6 +235,15 @@ public class QuestionServiceImp implements QuestionService{
             questionRepository.save(question);
             return question;
         }
+    @Transactional
+    public Answer unacceptAnswer(Long answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+
+        // Set the selected answer as not accepted
+        answer.setAccepted(false);
+        return answerRepository.save(answer);
+    }
     private boolean verifierQuestionAvecBadWords(String title, String content) {
         String url = "http://localhost:8000/detect"; // Assurez-vous que le port et le chemin sont corrects
 

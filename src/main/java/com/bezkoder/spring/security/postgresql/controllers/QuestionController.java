@@ -83,6 +83,12 @@ public class QuestionController {
 
         return ResponseEntity.ok(new MessageResponse("Question created and associated with tag(s) successfully!"));
     }
+    @PutMapping("/{answerId}/unaccept")
+    public ResponseEntity<Answer> unacceptAnswer(@PathVariable Long answerId) {
+        Answer unacceptedAnswer = questionService.unacceptAnswer(answerId);
+        return ResponseEntity.ok(unacceptedAnswer);
+    }
+
 
 
     @GetMapping("/byTag/{tagName}")
