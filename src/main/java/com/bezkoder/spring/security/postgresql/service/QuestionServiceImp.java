@@ -85,11 +85,13 @@ public class QuestionServiceImp implements QuestionService{
         return questionRepository.searchQuestions(keyword);
     }
 
+@Transactional
     public List<QuestionDto> getAllQuestions1() {
         return questionRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
+
 
     private QuestionDto convertToDto(Question question) {
         QuestionDto dto = new QuestionDto();
@@ -191,7 +193,6 @@ public class QuestionServiceImp implements QuestionService{
                 throw new RuntimeException("La question existe déjà");
             }
 
-            // Vérification des bad words dans le titre et le contenu
             boolean contientBadWords = verifierQuestionAvecBadWords(questionRequest.getTitle(), questionRequest.getContent());
             if (contientBadWords) {
                 throw new RuntimeException("La question contient des mots interdits.");
@@ -245,11 +246,11 @@ public class QuestionServiceImp implements QuestionService{
         return answerRepository.save(answer);
     }
     private boolean verifierQuestionAvecBadWords(String title, String content) {
-        String url = "http://localhost:8000/detect"; // Assurez-vous que le port et le chemin sont corrects
+        String url = "http://127.0.0.1:8000/detect"; // Assurez-vous que le port et le chemin sont corrects
 
+        // Charger les données avec un seul champ input
         Map<String, String> requestPayload = new HashMap<>();
-        requestPayload.put("title", title);
-        requestPayload.put("content", content);
+        requestPayload.put("input", title + " " + content);
 
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -263,14 +264,12 @@ public class QuestionServiceImp implements QuestionService{
 
             Map<String, Object> responseBody = response.getBody();
             if (responseBody != null) {
-                Boolean titleContainsBadWords = (Boolean) responseBody.get("title_contains_bad_words");
-                Boolean contentContainsBadWords = (Boolean) responseBody.get("content_contains_bad_words");
+                Boolean containsBadWords = (Boolean) responseBody.get("result");
 
-                // Log the results for debugging
-                System.out.println("Title contains bad words: " + titleContainsBadWords);
-                System.out.println("Content contains bad words: " + contentContainsBadWords);
+                // Log pour le débogage
+                System.out.println("Contient des mots interdits : " + containsBadWords);
 
-                return titleContainsBadWords || contentContainsBadWords;
+                return containsBadWords != null && containsBadWords;
             }
         } catch (Exception e) {
             System.err.println("Erreur lors de la vérification des mauvais mots : " + e.getMessage());
@@ -367,6 +366,7 @@ public class QuestionServiceImp implements QuestionService{
 
     }
     @Override
+    @Transactional
     public AnswerDto mapAnswerToDto(Answer answer) {
         AnswerDto dto = new AnswerDto();
         dto.setId(answer.getId());
@@ -390,6 +390,7 @@ public class QuestionServiceImp implements QuestionService{
         return dto;
     }
     @Override
+    @Transactional
     public AnswerResponseDto mapToAnswerResponseDto(AnswerResponse answerResponse) {
         AnswerResponseDto dto = new AnswerResponseDto();
         dto.setId(answerResponse.getId());

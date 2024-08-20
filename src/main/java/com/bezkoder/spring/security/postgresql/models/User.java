@@ -66,7 +66,7 @@ public class User {
   @JsonIgnore
   private Set<Badge> badges;
 
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JsonManagedReference
   private Reputation reputation;
   @OneToMany(mappedBy = "user")
@@ -99,11 +99,11 @@ public class User {
   private Set<Role> roles = new HashSet<>();
 
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
   @JsonIgnore
   private Set<Question> questions = new HashSet<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
   @JsonIgnore
   private Set<Answer> answers = new HashSet<>();
 
@@ -257,7 +257,6 @@ public class User {
   @Transient
   private String imageBase64;
 
-  // Getters and setters for imageBase64
 
   public String getImageBase64() {
     return imageBase64;
