@@ -20,7 +20,7 @@ public class QuestionRepositoryImpl implements QuestionRepositoryCustom{
     @PersistenceContext
     private EntityManager entityManager;
     @Transactional
-    public List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags,Boolean isUserAnonymous, Pageable pageable) {
+    public List<Question> findByCriteria(String title, String content, Long matricule, List<String> tags, Boolean isUserAnonymous, Pageable pageable) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Question> cq = cb.createQuery(Question.class);
 
@@ -28,10 +28,10 @@ public class QuestionRepositoryImpl implements QuestionRepositoryCustom{
         List<Predicate> predicates = new ArrayList<>();
 
         if (title != null) {
-            predicates.add(cb.like(question.get("title"), "%" + title + "%"));
+            predicates.add(cb.like(cb.lower(question.get("title")), "%" + title.toLowerCase() + "%"));
         }
         if (content != null) {
-            predicates.add(cb.like(question.get("content"), "%" + content + "%"));
+            predicates.add(cb.like(cb.lower(question.get("content")), "%" + content.toLowerCase() + "%"));
         }
         if (tags != null && !tags.isEmpty()) {
             Join<Question, Tag> tagsJoin = question.join("tags", JoinType.INNER);
@@ -55,4 +55,5 @@ public class QuestionRepositoryImpl implements QuestionRepositoryCustom{
 
         return query.getResultList();
     }
+
 }

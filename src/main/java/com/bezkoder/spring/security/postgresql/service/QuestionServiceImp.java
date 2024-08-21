@@ -85,7 +85,7 @@ public class QuestionServiceImp implements QuestionService{
         return questionRepository.searchQuestions(keyword);
     }
 
-@Transactional
+    @Transactional
     public List<QuestionDto> getAllQuestions1() {
         return questionRepository.findAll().stream()
                 .map(this::convertToDto)
@@ -481,19 +481,16 @@ public class QuestionServiceImp implements QuestionService{
     }
 
 
-// Dans QuestionServiceImp.java
-@Override
-@Transactional
-public void deleteQuestion(Long questionId) {
-    Question question = questionRepository.findById(questionId)
-            .orElseThrow(() -> new RuntimeException("Question not found"));
+    @Override
+    @Transactional
+    public void deleteQuestion(Long questionId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
 
-    // Supprimez tous les favoris associés à la question
-    favoriteRepository.deleteByQuestionId(questionId);
+        favoriteRepository.deleteByQuestionId(questionId);
 
-    questionRepository.delete(question);
-}
-
+        questionRepository.delete(question);
+    }
 
 
     @Override

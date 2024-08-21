@@ -64,12 +64,7 @@ services:
   svm-model:
       container_name: svm-model-container
       image: my-svm-model
-      environment:
-        - POSTGRES_HOST=postgres-sql-bsn
-        - POSTGRES_PORT=5432
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=admin
-        - POSTGRES_DB=sopra-helper
+
       ports:
         - 8003:8003
       depends_on:
