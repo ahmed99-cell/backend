@@ -30,6 +30,10 @@ public interface QuestionService {
     Answer updateAnswer(Long questionId, Long answerId, AnswerRequest answerRequest, MultipartFile file);
     void deleteAnswer(Long questionId, Long answerId);
     Answer unacceptAnswer(Long answerId);
+
+     List<AnswerResponseDto> findAnswersResponseByUserIdAndDateRange(Long userId, Date startDate, Date endDate) ;
+
+
     List<Answer> getAnswersByQuestionId(Long questionId);
     Answer createAnswer(Long questionId, AnswerRequest answerRequest, String username,MultipartFile file);
     AnswerResponse createResponseToAnswer(Long questionId, Long parentAnswerId, AnswerRequest answerRequest, String username);

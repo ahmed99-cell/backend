@@ -1,9 +1,6 @@
 package com.bezkoder.spring.security.postgresql.controllers;
 
-import com.bezkoder.spring.security.postgresql.Dto.AnswerDto;
-import com.bezkoder.spring.security.postgresql.Dto.QuestionByIdDto;
-import com.bezkoder.spring.security.postgresql.Dto.QuestionDto;
-import com.bezkoder.spring.security.postgresql.Dto.QuestionSearchRequestDto;
+import com.bezkoder.spring.security.postgresql.Dto.*;
 import com.bezkoder.spring.security.postgresql.models.*;
 import com.bezkoder.spring.security.postgresql.payload.request.AnswerRequest;
 import com.bezkoder.spring.security.postgresql.payload.request.QuestionRequest;
@@ -170,6 +167,18 @@ public class QuestionController {
 
         return ResponseEntity.ok(new MessageResponse("Question created and associated with tag(s) successfully!"));
     }*/
+    @GetMapping("/answersbyuseranddaterange")
+    public ResponseEntity<List<AnswerResponseDto>> getAnswersResponseByUserIdAndDateRange(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+
+        // Call the service method to fetch answers by user ID and date range
+        List<AnswerResponseDto> answers = questionService.findAnswersResponseByUserIdAndDateRange(userId, startDate, endDate);
+
+        // Return the list of AnswerResponseDto wrapped in a ResponseEntity
+        return new ResponseEntity<>(answers, HttpStatus.OK);
+    }
 
 
 

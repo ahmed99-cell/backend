@@ -14,7 +14,8 @@ public class AnswerResponseDto {
     private String username;
     private String createdAt;
     private String updatedAt;
-
+    private Long questionId;
+    private Long answerId;
     public Long getUserId() {
         return userId;
     }

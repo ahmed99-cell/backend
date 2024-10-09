@@ -394,6 +394,8 @@ public class QuestionServiceImp implements QuestionService{
     public AnswerResponseDto mapToAnswerResponseDto(AnswerResponse answerResponse) {
         AnswerResponseDto dto = new AnswerResponseDto();
         dto.setId(answerResponse.getId());
+        dto.setQuestionId(answerResponse.getParentAnswer().getQuestion().getId());
+        dto.setAnswerId(answerResponse.getParentAnswer().getId());
         dto.setContent(answerResponse.getContent());
         dto.setUserId(answerResponse.getUser().getMatricule());
         dto.setUsername(answerResponse.getUser().getUsername());
@@ -679,7 +681,7 @@ public class QuestionServiceImp implements QuestionService{
         Set<AnswerResponse> responses = answer.getResponses();
         return new ArrayList<>(responses);
     }
-
+    @Transactional
     @Override
     public AnswerResponse updateResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, AnswerRequest answerRequest, String username) {
         User user = userRepository.findByUsername(username)
@@ -703,7 +705,7 @@ public class QuestionServiceImp implements QuestionService{
 
         return answerResponseRepository.save(response);
     }
-
+    @Transactional
     @Override
     public void deleteResponseToAnswer(Long questionId, Long parentAnswerId, Long responseId, String username) {
         User user = userRepository.findByUsername(username)
@@ -731,6 +733,15 @@ public class QuestionServiceImp implements QuestionService{
 
         question.getTags().add(tag);
         questionRepository.save(question);
+    }
+    @Transactional
+    @Override
+    public List<AnswerResponseDto> findAnswersResponseByUserIdAndDateRange(Long userId, Date startDate, Date endDate) {
+        // Use the custom repository method to fetch answers based on user ID and date range
+        List<AnswerResponse> answers = answerResponseRepository.findByUserIdAndCreatedAtBetween(userId, startDate, endDate);
+        return answers.stream()
+                .map(this::mapToAnswerResponseDto) // Mapping AnswerResponse to AnswerResponseDto
+                .collect(Collectors.toList());
     }
 
     // Dissocier un tag d'une question
